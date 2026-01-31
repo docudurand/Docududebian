@@ -65,7 +65,7 @@ const ALLOWED_ORIGINS_EXACT = new Set([
   "https://www.documentsdurand.fr",
   "https://documentsdurand.fr",
   "https://imaginatevie-hamster-040331.netlify.app",
-  "",
+  "https://mes-formulaires.onrender.com",
 ]);
 
 // Cette fonction sert a verifier une origine CORS
@@ -866,7 +866,7 @@ function fmtFR(dt, { withTime = true } = {}) {
 }
 
 // Base publique du site (utilisee dans les liens emails)
-const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL || "";
+const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL || "https://mes-formulaires.onrender.com";
 
 // Email du responsable site pour les envois de mails
 const SITE_RESP_EMAIL = (process.env.MAIL_CG || "").trim();
@@ -2038,6 +2038,30 @@ function parseEnvJSON(raw, fallback) {
   }
 }
 
+// --- Helpers: JSON stockés sur le FTP (au lieu des variables Render) ---
+// Lit un JSON sur le FTP (sous FTP_BACKUP_FOLDER). Si absent, seed depuis la variable d'env.
+async function fetchAndEnsureFtpJson_(fileName, envVarName, fallback) {
+  const baseDir = normFtpPath_(process.env.FTP_BACKUP_FOLDER || "");
+  // path.posix.join ignore le 1er argument si le 2e commence par '/'
+  const remote = normFtpPath_(path.posix.join(baseDir || "", String(fileName || "")));
+
+  let client;
+  try {
+    client = await ftpClient();
+
+    // 1) On tente de lire le fichier JSON sur le FTP
+    const fromFtp = await dlJSON(client, remote);
+    if (fromFtp !== null) return fromFtp;
+
+    // 2) Absent -> on se base sur la variable d'env puis on l'upload pour la suite
+    const seeded = parseEnvJSON(process.env[envVarName], fallback);
+    await upJSON(client, remote, seeded);
+    return seeded;
+  } finally {
+    try { client?.close(); } catch {}
+  }
+}
+
 app.get("/api/pl/liens-garantie-retour", (_req, res) => {
   const data = parseEnvJSON(process.env.PL_LIENS_GARANTIE_RETOUR_JSON, []);
   res.setHeader("Cache-Control", "no-store");
@@ -2045,9 +2069,22 @@ app.get("/api/pl/liens-garantie-retour", (_req, res) => {
 });
 
 app.get("/api/vl/retour-garantie", (_req, res) => {
-  const data = parseEnvJSON(process.env.VL_RETOUR_GARANTIE_JSON, {});
-  res.setHeader("Cache-Control", "no-store");
-  res.json(data);
+  (async () => {
+    try {
+      const data = await fetchAndEnsureFtpJson_(
+        "vl_retour_garantie.json",
+        "VL_RETOUR_GARANTIE_JSON",
+        {}
+      );
+      res.setHeader("Cache-Control", "no-store");
+      return res.json(data);
+    } catch (e) {
+      // fallback (comportement historique)
+      const data = parseEnvJSON(process.env.VL_RETOUR_GARANTIE_JSON, {});
+      res.setHeader("Cache-Control", "no-store");
+      return res.json(data);
+    }
+  })();
 });
 app.get("/api/vl/liens-formulaire-garantie", (_req, res) => {
   const data = parseEnvJSON(process.env.VL_LIENS_FORMULAIRE_GARANTIE_JSON, []);
@@ -2076,14 +2113,30 @@ app.use("/garantie", express.static(path.join(__dirname, "garantie"), {
 
 // Contacts fournisseurs (depuis env JSON)
 app.get("/api/util/contacts-fournisseurs", (_req, res) => {
-  try {
-    const raw = process.env.CONTACTS_FOURNISSEURS_JSON || "[]";
-    const data = JSON.parse(raw);
-    res.setHeader("Cache-Control", "no-store");
-    return res.json(data);
-  } catch (e) {
-    return res.status(500).json({ error: "CONTACTS_FOURNISSEURS_JSON invalid", details: String(e?.message || e) });
-  }
+  (async () => {
+    try {
+      const data = await fetchAndEnsureFtpJson_(
+        "contacts_fournisseurs.json",
+        "CONTACTS_FOURNISSEURS_JSON",
+        []
+      );
+      res.setHeader("Cache-Control", "no-store");
+      return res.json(data);
+    } catch (e) {
+      // fallback (comportement historique)
+      try {
+        const raw = process.env.CONTACTS_FOURNISSEURS_JSON || "[]";
+        const data = JSON.parse(raw);
+        res.setHeader("Cache-Control", "no-store");
+        return res.json(data);
+      } catch (err) {
+        return res.status(500).json({
+          error: "CONTACTS_FOURNISSEURS_JSON invalid",
+          details: String(err?.message || err),
+        });
+      }
+    }
+  })();
 });
 
 // Liens televente exposes en JSON
