@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<!--page de connexion du site (mot de passe)-->
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Connexion - Documents Durand</title>
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body class="login-page">
+  <div class="auth-wrap">
+  <img
+  class="auth-logo"
+  src="https://raw.githubusercontent.com/docudurand/mes-formulaires/main/logo2.png"
+  alt="Documents Durand"
+/>
+    <div class="auth-card">
+      <h1 class="auth-title">Accès protégé</h1>
+      <p class="auth-desc">Saisis le mot de passe pour accéder au site.</p>
+
+      <!-- Formulaire de login -->
+      <form id="loginForm" class="auth-row" action="." method="post" autocomplete="on">
+        <input
+          id="username"
+          name="username"
+          type="text"
+          autocomplete="username"
+          value="documentsdurand"
+          aria-hidden="true"
+          tabindex="-1"
+          style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0;"
+        />
+
+        <input
+          id="pwd"
+          class="auth-input"
+          type="password"
+          name="password"
+          placeholder="Mot de passe"
+          autocomplete="current-password"
+        />
+
+        <button class="auth-btn" type="submit">Entrer</button>
+      </form>
+
+      <div id="loginError" class="auth-error"></div>
+
+      <div class="small-note"></div>
+    </div>
+  </div>
+
+  <script>window.__SITE_PREFIX__="";</script>
+  <script src="assets/auth.js"></script>
+  <script>
+    (function(){
+      if (typeof wireLoginForm === "function") {
+        wireLoginForm({
+          formId: "loginForm",
+          usernameId: "username",
+          passwordId: "pwd",
+          errorId: "loginError"
+        });
+      } else {
+        const form = document.getElementById("loginForm");
+        const pwd  = document.getElementById("pwd");
+        const err  = document.getElementById("loginError");
+
+        form.addEventListener("submit", (e) => {
+          e.preventDefault();
+          err.textContent = "";
+          const ok = loginWith(pwd.value || "");
+          if (!ok) { err.textContent = "Mot de passe incorrect."; pwd.focus(); return; }
+          const params = new URLSearchParams(location.search);
+          const redirect = params.get("redirect") || "/index.html";
+          window.location.replace(redirect);
+        });
+      }
+
+      document.getElementById("pwd").focus();
+    })();
+  </script>
+</body>
+</html>

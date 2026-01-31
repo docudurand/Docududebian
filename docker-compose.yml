@@ -1,0 +1,9 @@
+services:
+  mes-formulaires:
+    build: .
+    container_name: mes-formulaires
+    env_file:
+      - /etc/mes-formulaires/mes-formulaires.env
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"

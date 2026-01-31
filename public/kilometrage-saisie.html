@@ -1,0 +1,1677 @@
+<!DOCTYPE html>
+<!--kilometrage saisie-->
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Saisie kilométrage tournée</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="apple-touch-icon" sizes="180x180" href="icon-km.png" />
+  <meta name="apple-mobile-web-app-title" content="Km tournée" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="theme-color" content="#003c8f">
+
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f7f7f7;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      min-height: 100vh;
+      align-items: center;
+      justify-content: center;
+    }
+    .card {
+      background: #fff;
+      padding: 20px 24px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      max-width: 460px;
+      width: 100%;
+    }
+    .logo { text-align: center; margin-bottom: 12px; }
+    .logo img { max-width: 160px; height: auto; }
+
+    h1 { font-size: 1.3rem; margin: 0 0 4px 0; text-align: center; }
+    .sub { font-size: 0.9rem; color: #666; text-align: center; margin-bottom: 12px; }
+
+    .info {
+      font-size: 0.9rem;
+      margin-bottom: 12px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: #f0f4ff;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin: 10px 0 14px 0;
+    }
+    .tabBtn {
+      flex: 1;
+      border: 1px solid #c7d2fe;
+      background: #fff;
+      color: #1e3a8a;
+      border-radius: 999px;
+      padding: 10px 0;
+      font-weight: 800;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+    .tabBtn.active {
+      background: #2563eb;
+      border-color: #2563eb;
+      color: #fff;
+    }
+
+    label { display: block; font-size: 0.9rem; margin-top: 10px; margin-bottom: 4px; }
+    input[type="date"], input[type="number"], textarea, select {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 0.95rem;
+      font-family: inherit;
+      background-color: #ffffff;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    input[type="date"], input[type="number"], select { height: 44px; line-height: 1.2; }
+    textarea { resize: vertical; min-height: 60px; }
+
+    button.primary {
+      margin-top: 16px;
+      width: 100%;
+      padding: 10px 0;
+      border-radius: 999px;
+      border: none;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: #2563eb;
+      color: #fff;
+    }
+    button.primary:disabled { opacity: 0.6; cursor: default; }
+
+    .msg { margin-top: 10px; font-size: 0.9rem; text-align: center; }
+    .msg.ok { color: #15803d; }
+    .msg.err { color: #b91c1c; }
+
+    .resume {
+      margin-top: 10px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: #ecfeff;
+      font-size: 0.9rem;
+    }
+    .resume-title { font-weight: 600; margin-bottom: 6px; }
+    .resume-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; }
+    .resume-item { padding: 4px 6px; border-radius: 6px; background: #e5f3ff; }
+    .resume-item strong { display: inline-block; min-width: 2.5em; }
+
+    .resume-loader {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      color: #2563eb;
+      margin-top: 10px;
+    }
+    .resume-loader-spinner {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 2px solid #bfdbfe;
+      border-top-color: #2563eb;
+      animation: resume-spin 0.7s linear infinite;
+    }
+    @keyframes resume-spin { to { transform: rotate(360deg); } }
+
+    .scan-loader{
+      display:none;
+      align-items:center;
+      gap:8px;
+      font-size:0.9rem;
+      color:#2563eb;
+      margin-top:10px;
+    }
+    .scan-loader-spinner{
+      width:18px;height:18px;border-radius:50%;
+      border:2px solid #bfdbfe;border-top-color:#2563eb;
+      animation: resume-spin 0.7s linear infinite;
+    }
+
+    @media (max-width: 480px) {
+      .card { margin: 12px; padding: 16px 18px; }
+    }
+
+    .btnRow { display:flex; gap:10px; flex-wrap:wrap; margin-top: 10px; }
+    .btnRow button { 
+      width:auto; 
+      flex:1; 
+      min-width: 140px; 
+      margin-top: 0; 
+      border-radius: 999px; 
+      border: none; 
+      padding: 14px 12px; 
+      min-height: 56px; 
+      font-weight: 700; 
+      cursor:pointer; 
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      line-height:1.15;
+      white-space: normal;
+    }
+    .btnSecondary { background:#0f172a; color:#fff; }
+    .btnScan { background:#2563eb; color:#fff; }
+    .pill { display:inline-block; padding:4px 10px; border-radius:999px; font-size:12px; font-weight:700; background:#eef2ff; color:#1e3a8a; }
+
+    .multiPanel{
+      display:none;
+      margin-top:12px;
+      padding:10px 12px;
+      border-radius:12px;
+      background:#f8fafc;
+      border:1px solid #e5e7eb;
+    }
+    .multiTitleRow{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+    .multiList{
+      margin-top:10px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+    .multiTag{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      background:#eef2ff;
+      color:#1e3a8a;
+      font-weight:800;
+      font-size:14px;
+      border:1px solid #c7d2fe;
+    }
+    .multiTag button{
+      border:0;
+      background:transparent;
+      cursor:pointer;
+      font-weight:900;
+      font-size:14px;
+      line-height:1;
+      color:#1e3a8a;
+      padding:0 2px;
+    }
+    .multiSmall{ font-size:12px; color:#555; margin-top:8px; }
+
+.multiActions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:6px;
+  width:100%;
+}
+.multiActions button{
+  flex:1;
+  min-width: 160px;
+  padding: 14px 14px;
+  min-height: 56px;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 0.2px;
+}
+.multiActions button:active{ transform: translateY(1px); }
+
+.multiPanelNote{
+  display:inline-block;
+  padding:6px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:800;
+  background:#e2e8f0;
+  color:#0f172a;
+  border:1px solid #cbd5e1;
+}
+
+@media (max-width: 480px) {
+  .multiActions{ flex-direction:column; }
+  .multiActions button{ width:100%; min-width: unset; }
+}
+  
+  #permGate{
+    position: fixed;
+    inset: 0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    background: rgba(15, 23, 42, 0.55);
+    z-index: 9999;
+    padding: 18px;
+  }
+  #permGate .permCard{
+    width: min(520px, 100%);
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 18px 60px rgba(0,0,0,.20);
+    padding: 18px 16px;
+  }
+  #permGate .permTitle{
+    font-weight: 800;
+    font-size: 16px;
+    margin: 0 0 8px 0;
+  }
+  #permGate .permTxt{
+    font-size: 14px;
+    line-height: 1.35;
+    color: #334155;
+    margin: 0 0 14px 0;
+  }
+  #permGate .permActions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+  }
+  #permGate .permBtn{
+    border:0;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  #permGate .permBtn.primary{
+    background: var(--brandBlue, #2563eb);
+    color:#fff;
+  }
+  #permGate .permBtn.ghost{
+    background: #eef2ff;
+    color:#1e293b;
+  }
+
+    #scanModal{ overscroll-behavior: contain; }
+
+    #scanModal .scanCard{
+      max-height: calc(100vh - 28px);
+      display:flex;
+      flex-direction:column;
+    }
+
+    #scanModal .scanBody{
+      overflow-y:auto;
+      -webkit-overflow-scrolling: touch;
+      max-height: calc(100vh - 120px);
+    }
+
+    #multiModalList{
+      margin-top:10px !important;
+      height: 26vh;
+      max-height: 220px;
+      overflow-y:auto !important;
+      -webkit-overflow-scrolling: touch;
+      padding:6px;
+      border:1px solid #e5e7eb;
+      border-radius:12px;
+      background:#f8fafc;
+    }
+
+</style>
+
+<script src="/js/html5-qrcode.min.js"></script>
+<script>
+  const API_BASE = "";
+  const apiUrl = (u) => (String(u).startsWith("http") ? u : (API_BASE + u));
+</script>
+
+</head>
+<body>
+  <div class="card">
+
+    <div id="permGate" role="dialog" aria-modal="true">
+      <div class="permCard">
+        <div class="permTitle">🔐 Autorisations requises</div>
+        <div class="permTxt">
+          Pour scanner les colis et enregistrer la preuve de livraison, autorise :
+          <br>• 📷 la caméra (scan)
+          <br>• 📍 la géolocalisation (lieu de livraison)
+          <br><br><b>Astuce :</b> si tu refuses, tu peux les activer plus tard dans les réglages du navigateur.
+        </div>
+        <div class="permActions">
+          <button id="btnSkipPerms" class="permBtn ghost" type="button">Plus tard</button>
+          <button id="btnAskPerms" class="permBtn primary" type="button">Autoriser et continuer</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="logo">
+      <img src="https://raw.githubusercontent.com/docudurand/mes-formulaires/main/logodurand.png" alt="Logo Durand Services" />
+    </div>
+
+    <h1>Kilométrage</h1>
+
+    <div id="infoBloc" class="info">Chargement des informations de tournée...</div>
+
+    <div class="tabs">
+      <button type="button" class="tabBtn active" id="tabKmBtn">Kilométrage</button>
+      <button type="button" class="tabBtn" id="tabScanBtn">Scan</button>
+    </div>
+
+    <div id="tabKm">
+      <form id="kmForm">
+        <label for="date">Date de la journée</label>
+        <input type="date" id="date" name="date" required />
+
+        <label for="horaire">Horaire du relevé</label>
+        <select id="horaire" name="horaire">
+          <option value="8H">8H</option>
+          <option value="12H">12H</option>
+          <option value="14H">14H</option>
+          <option value="18H">18H</option>
+        </select>
+
+        <label for="km">Relevé compteur à cette heure</label>
+        <input type="number" id="km" name="km" min="0" step="0.1" required />
+
+        <label for="commentaire">Commentaire (optionnel)</label>
+        <textarea id="commentaire" name="commentaire" placeholder="Ex : détour, chargement supplémentaire, etc."></textarea>
+
+        <div id="resumeLoader" class="resume-loader">
+          <div class="resume-loader-spinner"></div>
+          <span>Chargement des relevés...</span>
+        </div>
+
+        <div id="resumeBloc" class="resume">
+          <div class="resume-title">Résumé des relevés de la journée</div>
+          <div class="resume-grid">
+            <div class="resume-item"><strong>8H :</strong> <span id="resume8h">-</span></div>
+            <div class="resume-item"><strong>12H :</strong> <span id="resume12h">-</span></div>
+            <div class="resume-item"><strong>14H :</strong> <span id="resume14h">-</span></div>
+            <div class="resume-item"><strong>18H :</strong> <span id="resume18h">-</span></div>
+          </div>
+        </div>
+
+        <button type="submit" id="submitBtn" class="primary">Valider</button>
+      </form>
+
+      <div id="message" class="msg"></div>
+    </div>
+
+    <div id="tabScan" style="display:none">
+      <div class="info" id="colisInfo" style="margin-bottom:10px">
+        Tournée: <b id="tourneeNavetteTxt">—</b> • Livreur: <b id="livreurTxt">—</b> • Magasin: <b id="magasinTxt">—</b>
+      </div>
+
+      <div class="btnRow">
+        <button type="button" id="btnScanFeuille" class="btnSecondary">📄 Scanner feuille émargement</button>
+        <button type="button" id="btnScanCharger" class="btnScan">📦 Scanner colis à charger</button>
+        <button type="button" id="btnScanLivrer" class="btnScan">🚚 Scanner colis livrer</button>
+      </div>
+
+<div id="scanLoader" class="scan-loader">
+        <div class="scan-loader-spinner"></div>
+        <span id="scanLoaderTxt">Traitement...</span>
+      </div>
+
+      <div id="colisMsg" class="msg" style="display:none;margin:10px 0 0 0;text-align:left"></div>
+
+      <div class="info" style="margin-top:10px">
+        Restant à livrer : <b id="restants">0</b>
+      </div>
+      <div id="listeColis" style="margin-top:10px"></div>
+    </div>
+
+    <div id="scanModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;padding:14px">
+      <div class="scanCard" style="max-width:520px;margin:0 auto;background:#fff;border-radius:14px;overflow:visible">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#111;color:#fff">
+          <b id="scanTitle">Scan</b>
+          <button type="button" id="btnCloseScan" style="background:#fff;border:0;border-radius:10px;padding:8px 10px;font-weight:800;cursor:pointer">Fermer</button>
+        </div>
+        <div class="scanBody" style="padding:10px">
+          <div id="qr-reader" style="width:100%"></div>
+
+          <div id="multiModalInfo" style="display:none;margin-top:10px">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+              <span class="pill">Scannés : <span id="multiCount">0</span></span>
+              <div class="multiActions">
+                <button type="button" id="btnMultiValidate" class="btnScan">✅ Valider la liste</button>
+                <button type="button" id="btnMultiClear" class="btnSecondary">🗑️ Vider</button>
+              </div>
+            </div>
+            <div id="multiModalList"></div>
+            <div class="multiSmall">Scanne plusieurs QR codes. Quand tu as fini, valide la liste (les numéros seront envoyés un par un).</div>
+          </div>
+
+          <div style="font-size:12px;color:#555;margin-top:8px">
+            Autorise la caméra. Utilise la caméra arrière si possible.
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Modal preuve photo livraison -->
+    <div id="photoModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:10000;padding:14px">
+      <div style="max-width:520px;margin:0 auto;background:#fff;border-radius:14px;overflow:hidden">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#111;color:#fff">
+          <b>📸 Preuve de livraison</b>
+          <button type="button" id="btnClosePhoto" style="background:#fff;border:0;border-radius:10px;padding:8px 10px;font-weight:800;cursor:pointer">Fermer</button>
+        </div>
+        <div style="padding:12px">
+          <div id="photoInfo" class="info" style="margin:0 0 10px 0">Prends une photo, puis clique sur Envoyer.</div>
+
+          <input id="photoInput" type="file" accept="image/*" capture="environment"
+                 style="display:none" />
+          
+          <button type="button" id="btnCapturePhoto" class="btnScan" style="width:100%;margin:0;padding:14px 12px;min-height:56px;font-size:1rem">📷 Capturer photo</button>
+
+          <div style="margin-top:10px">
+            <img id="photoPreview" alt="Aperçu" style="display:none;width:100%;border-radius:12px;border:1px solid #e5e7eb" />
+          </div>
+
+          <div class="btnRow" style="margin-top:12px">
+            <button type="button" id="btnSendPhoto" class="btnScan">📤 Envoyer la photo</button>
+            <button type="button" id="btnSkipPhoto" class="btnSecondary">Ignorer</button>
+          </div>
+
+          <div id="photoMsg" class="msg" style="display:none;margin-top:10px;text-align:left"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+const params = new URLSearchParams(window.location.search);
+const NAVETTE_ENABLED = params.get("navette") === "1";
+
+const PERM_OK_KEY = "NAVETTE_PERMS_OK_V1";
+
+function hasPermsOkFlag() {
+  try { return localStorage.getItem(PERM_OK_KEY) === "1"; } catch (e) { return false; }
+}
+function setPermsOkFlag(v) {
+  try { localStorage.setItem(PERM_OK_KEY, v ? "1" : "0"); } catch (e) {}
+}
+
+async function getGeoState() {
+  try {
+    if (!navigator.permissions) return "unknown";
+    const r = await navigator.permissions.query({ name: "geolocation" });
+    return r.state;
+  } catch (e) {
+    return "unknown";
+  }
+}
+
+async function shouldShowPermGate() {
+  if (!NAVETTE_ENABLED) return false;
+
+  if (hasPermsOkFlag()) {
+    const geo = await getGeoState();
+
+    if (geo !== "denied") return false;
+  }
+  return true;
+}
+
+async function requestPermissionsOnUserGesture() {
+  const gpsOk = await new Promise((resolve) => {
+    if (!navigator.geolocation) return resolve(false);
+    navigator.geolocation.getCurrentPosition(
+      () => resolve(true),
+      () => resolve(false),
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+    );
+  });
+
+  let camOk = false;
+  try {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error("no_media_devices");
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+    camOk = true;
+    stream.getTracks().forEach(t => t.stop());
+  } catch (e) {
+    camOk = false;
+  }
+
+  const ok = !!(gpsOk && camOk);
+  setPermsOkFlag(ok);
+  return { gpsOk, camOk, ok };
+}
+
+function initPermGate() {
+  const gate = document.getElementById("permGate");
+  const btnAsk = document.getElementById("btnAskPerms");
+  const btnSkip = document.getElementById("btnSkipPerms");
+  if (!gate || !btnAsk || !btnSkip) return;
+
+  const hide = () => { gate.style.display = "none"; };
+  const show = () => { gate.style.display = "flex"; };
+
+  (async () => {
+    const showIt = await shouldShowPermGate();
+    if (showIt) show(); else hide();
+  })();
+
+  btnSkip.addEventListener("click", () => {
+
+    hide();
+  });
+
+  btnAsk.addEventListener("click", async () => {
+    btnAsk.disabled = true;
+    const oldTxt = btnAsk.textContent;
+    btnAsk.textContent = "Demande en cours…";
+    try {
+      const r = await requestPermissionsOnUserGesture();
+
+      hide();
+
+      if (!r.ok) {
+        try { setColisMsg("⚠️ Autorisations refusées. Tu peux les activer dans les réglages du navigateur.", true); } catch (e) {}
+      }
+    } finally {
+      btnAsk.disabled = false;
+      btnAsk.textContent = oldTxt;
+    }
+  });
+}
+
+if (NAVETTE_ENABLED) {
+  initPermGate();
+} else {
+  try { const g = document.getElementById('permGate'); if (g) g.style.display = 'none'; } catch (e) {}
+}
+
+if (!NAVETTE_ENABLED) {
+  const tabScanBtn = document.getElementById("tabScanBtn");
+  const tabScan = document.getElementById("tabScan");
+  if (tabScanBtn) tabScanBtn.style.display = "none";
+  if (tabScan) tabScan.style.display = "none";
+
+  try { localStorage.setItem("kmActiveTab", "km"); } catch (e) {}
+}
+
+    const tabKmBtn = document.getElementById("tabKmBtn");
+    const tabScanBtn = document.getElementById("tabScanBtn");
+    const tabKm = document.getElementById("tabKm");
+    const tabScan = document.getElementById("tabScan");
+
+    function setTab(name) {
+      if (name === "scan") {
+        tabKmBtn.classList.remove("active");
+        tabScanBtn.classList.add("active");
+        tabKm.style.display = "none";
+        tabScan.style.display = "block";
+      } else {
+        tabScanBtn.classList.remove("active");
+        tabKmBtn.classList.add("active");
+        tabScan.style.display = "none";
+        tabKm.style.display = "block";
+      }
+      try { localStorage.setItem("kmActiveTab", name); } catch(e){}
+    }
+
+    tabKmBtn.addEventListener("click", () => setTab("km"));
+    tabScanBtn.addEventListener("click", () => setTab("scan"));
+
+    const wantedTab = (params.get("tab") || "").toLowerCase();
+
+    if (NAVETTE_ENABLED && wantedTab === "scan") {
+      setTab("scan");
+    } else {
+      setTab("km");
+    }
+
+let agence        = params.get("agence")        || "";
+let codeAgence    = params.get("codeAgence")    || agence;
+let tournee       = params.get("tournee")       || "";
+let codeTournee   = params.get("codeTournee")   || "";
+let chauffeur     = params.get("chauffeur")     || "";
+let codeChauffeur = params.get("codeChauffeur") || "";
+let idQr          = params.get("id")            || "";
+
+    const infoBloc = document.getElementById("infoBloc");
+    const messageEl = document.getElementById("message");
+    const form = document.getElementById("kmForm");
+    const submitBtn = document.getElementById("submitBtn");
+    const dateInput = document.getElementById("date");
+    const horaireSelect = document.getElementById("horaire");
+    const kmInput = document.getElementById("km");
+
+    const resume8hEl = document.getElementById("resume8h");
+    const resume12hEl = document.getElementById("resume12h");
+    const resume14hEl = document.getElementById("resume14h");
+    const resume18hEl = document.getElementById("resume18h");
+    const resumeLoaderEl = document.getElementById("resumeLoader");
+
+    function urlHasConfigParams() {
+      return (
+        params.get("codeTournee") ||
+        params.get("agence") ||
+        params.get("tournee") ||
+        params.get("chauffeur") ||
+        params.get("codeChauffeur")
+      );
+    }
+
+    function saveConfigToStorage() {
+      const cfg = {
+        agence,
+        codeAgence,
+        tournee,
+        codeTournee,
+        chauffeur,
+        codeChauffeur,
+		id: idQr
+      };
+      try {
+        localStorage.setItem("kmConfig", JSON.stringify(cfg));
+      } catch (e) {
+        console.warn("Impossible de sauvegarder la config km", e);
+      }
+    }
+
+    function loadConfigFromStorage() {
+      try {
+        const str = localStorage.getItem("kmConfig");
+        if (!str) return false;
+        const cfg = JSON.parse(str);
+
+        agence        = cfg.agence        || "";
+        codeAgence    = cfg.codeAgence    || cfg.agence || "";
+        tournee       = cfg.tournee       || "";
+        codeTournee   = cfg.codeTournee   || "";
+        chauffeur     = cfg.chauffeur     || "";
+        codeChauffeur = cfg.codeChauffeur || "";
+		idQr          = cfg.id           || "";
+
+        const newQs = new URLSearchParams({
+          agence: agence,
+          codeAgence: codeAgence,
+          tournee: tournee,
+          codeTournee: codeTournee,
+          chauffeur: chauffeur,
+          codeChauffeur: codeChauffeur,
+		  id: idQr
+        });
+        const newUrl = window.location.pathname + "?" + newQs.toString();
+        window.history.replaceState({}, "", newUrl);
+
+        return !!codeTournee;
+      } catch (e) {
+        console.warn("Impossible de relire la config km", e);
+        return false;
+      }
+    }
+
+    if (urlHasConfigParams()) {
+      saveConfigToStorage();
+    } else {
+      const ok = loadConfigFromStorage();
+      if (!ok) {
+        infoBloc.innerHTML =
+          "Impossible de retrouver les informations de tournée.<br>" +
+          "Scanne à nouveau le QR code pour initialiser la page.";
+      }
+    }
+
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const dd = String(today.getDate()).padStart(2, "0");
+    dateInput.value = `${yyyy}-${mm}-${dd}`;
+
+    function buildInfo() {
+      const lines = [];
+      if (agence || codeAgence) {
+        lines.push(`<strong>Agence :</strong> ${agence || codeAgence}`);
+      }
+      if (tournee || codeTournee) {
+        lines.push(`<strong>Tournée :</strong> ${tournee || codeTournee}`);
+      }
+      if (chauffeur || codeChauffeur) {
+        lines.push(`<strong>Transporteur :</strong> ${chauffeur || codeChauffeur}`);
+      }
+      if (!lines.length) {
+        infoBloc.innerHTML =
+          "Les paramètres de la tournée ne sont pas dans l'URL. Scanne bien le QR code fourni.";
+      } else {
+        infoBloc.innerHTML = lines.join("<br>");
+      }
+    }
+
+    buildInfo();
+
+    function setResumeLoading(isLoading) {
+      resumeLoaderEl.style.display = isLoading ? "flex" : "none";
+    }
+
+    async function loadResume() {
+      resume8hEl.textContent  = "-";
+      resume12hEl.textContent = "-";
+      resume14hEl.textContent = "-";
+      resume18hEl.textContent = "-";
+
+      const dateValue = dateInput.value;
+      if (!dateValue || !codeTournee) {
+        setResumeLoading(false);
+        return;
+      }
+
+      setResumeLoading(true);
+
+      const year = dateValue.slice(0, 4);
+
+      const qs = new URLSearchParams({
+        agence: agence || codeAgence || "",
+        year: year
+      });
+
+function normalizeRowDate(row) {
+  const pick = (v) => (v === null || v === undefined) ? "" : String(v).trim();
+
+  const toLocalYMD = (d) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  };
+
+  let s = pick(row.date);
+  if (s) {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+
+    if (/^\d{4}-\d{2}-\d{2}T/.test(s)) {
+      const d = new Date(s);
+      if (!isNaN(d)) return toLocalYMD(d);
+      return s.slice(0, 10);
+    }
+
+    let m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+    if (m) return `${m[3]}-${m[2]}-${m[1]}`;
+  }
+
+  s = pick(row.timestamp);
+  if (s) {
+
+    if (/^\d{4}-\d{2}-\d{2}T/.test(s)) {
+      const d = new Date(s);
+      if (!isNaN(d)) return toLocalYMD(d);
+      return s.slice(0, 10);
+    }
+
+    if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+
+    let m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+    if (m) return `${m[3]}-${m[2]}-${m[1]}`;
+  }
+
+  return "";
+}
+
+      try {
+        const res = await fetch(apiUrl("/api/kilometrage/data?" + qs.toString()));
+        const data = await res.json().catch(() => null);
+
+        console.log("Données reçues pour résumé :", data);
+
+        if (!Array.isArray(data) || data.length === 0) {
+          console.log("Aucune donnée trouvée pour cette agence / année");
+          return;
+        }
+
+        const dateKey        = dateValue;
+        const agenceKey      = (codeAgence || agence || "").toUpperCase();
+        const codeTourneeKey = (codeTournee || "").toString().trim();
+
+        const ligne = data.find((row) => {
+          const rowAgence = (row.codeAgence || row.agence || "").toString().toUpperCase();
+          const rowCodeTournee = (row.codeTournee || "").toString().trim();
+          const rowDate = normalizeRowDate(row);
+
+          return (
+            rowAgence === agenceKey &&
+            rowCodeTournee === codeTourneeKey &&
+            rowDate === dateKey
+          );
+        });
+
+        console.log("Ligne trouvée pour résumé :", ligne);
+
+        if (!ligne) {
+          return;
+        }
+
+        if (ligne.km8h  !== null && ligne.km8h  !== "") resume8hEl.textContent  = ligne.km8h;
+        if (ligne.km12h !== null && ligne.km12h !== "") resume12hEl.textContent = ligne.km12h;
+        if (ligne.km14h !== null && ligne.km14h !== "") resume14hEl.textContent = ligne.km14h;
+        if (ligne.km18h !== null && ligne.km18h !== "") resume18hEl.textContent = ligne.km18h;
+      } catch (err) {
+        console.error("Erreur chargement résumé (via /data) :", err);
+      } finally {
+        setResumeLoading(false);
+      }
+    }
+
+    window.addEventListener("load", loadResume);
+    dateInput.addEventListener("change", loadResume);
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      messageEl.textContent = "";
+      messageEl.className = "msg";
+
+      const dateValue = dateInput.value;
+      const horaireValue = horaireSelect.value;
+      const kmValue = kmInput.value;
+      const commentaireUser = document.getElementById("commentaire").value || "";
+
+      if (!codeTournee) {
+        messageEl.textContent =
+          "Erreur : code tournée manquant. Scanne à nouveau le QR code.";
+        messageEl.classList.add("err");
+        return;
+      }
+      if (!dateValue) {
+        messageEl.textContent = "Merci de choisir une date.";
+        messageEl.classList.add("err");
+        return;
+      }
+      if (kmValue === "" || isNaN(Number(kmValue))) {
+        messageEl.textContent =
+          "Merci de saisir un kilométrage valide.";
+        messageEl.classList.add("err");
+        return;
+      }
+
+      const kmNumber = Number(kmValue);
+      const commentaireEncoded = `@${horaireValue}@${commentaireUser}`;
+
+            const payload = {
+        agence,
+        codeAgence,
+        tournee,
+        codeTournee,
+        chauffeur,
+        codeChauffeur,
+        date: dateValue,
+        km: kmNumber,
+        commentaire: commentaireEncoded,
+        id: idQr
+      };
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Enregistrement...";
+
+      try {
+const res = await fetch(apiUrl("/api/kilometrage/save"), {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(payload)
+});
+
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok || data.success === false) {
+          throw new Error(data.error || "Erreur serveur");
+        }
+
+        messageEl.textContent =
+          "Relevé " + horaireValue + " enregistré 👍";
+        messageEl.classList.add("ok");
+
+        kmInput.value = "";
+        document.getElementById("commentaire").value = "";
+        kmInput.focus();
+
+        loadResume();
+      } catch (err) {
+        console.error(err);
+        messageEl.textContent =
+          "Erreur lors de l'enregistrement. Réessaie ou contacte le responsable.";
+        messageEl.classList.add("err");
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Valider";
+      }
+    });
+
+    const magasinNavette = (params.get("magasin") || codeAgence || agence || "").toString().trim().toUpperCase();
+    const livreurId = (params.get("livreurId") || codeChauffeur || chauffeur || "").toString().trim();
+    let tourneeNavette = (params.get("tourneeNavette") || params.get("tourneeId") || "").toString().trim();
+
+    const tourneeNavetteTxt = document.getElementById("tourneeNavetteTxt");
+    const livreurTxt = document.getElementById("livreurTxt");
+    const magasinTxt = document.getElementById("magasinTxt");
+    const colisMsg = document.getElementById("colisMsg");
+    const scanLoader = document.getElementById("scanLoader");
+    const scanLoaderTxt = document.getElementById("scanLoaderTxt");
+
+    const restantsEl = document.getElementById("restants");
+    const listeColisEl = document.getElementById("listeColis");
+
+    if (!tourneeNavette && magasinNavette) {
+      try {
+        tourneeNavette = localStorage.getItem("NAVETTE_TOURNEE_" + magasinNavette) || "";
+      } catch(e){}
+    }
+
+    (async () => {
+      try {
+        const active = await getActiveTourneeId();
+        if (active) {
+          tourneeNavette = active;
+          try { localStorage.setItem("NAVETTE_TOURNEE_" + magasinNavette, tourneeNavette); } catch(e){}
+          refreshColisHeader();
+        }
+      } catch(e){}
+    })();
+
+    function setColisMsg(t, isErr=false) {
+      if (!colisMsg) return;
+      colisMsg.textContent = t || "";
+      colisMsg.style.display = t ? "block" : "none";
+      colisMsg.className = "msg " + (isErr ? "err" : "ok");
+    }
+
+    function setScanLoading(isLoading, text) {
+      if (!scanLoader) return;
+      scanLoader.style.display = isLoading ? "flex" : "none";
+      if (scanLoaderTxt && text) scanLoaderTxt.textContent = text;
+    }
+
+    function setScanButtonsDisabled(disabled) {
+      [btnScanFeuille, btnScanCharger, btnScanLivrer].forEach(b => {
+        if (!b) return;
+        b.disabled = !!disabled;
+        b.style.opacity = disabled ? "0.65" : "1";
+        b.style.cursor = disabled ? "default" : "pointer";
+      });
+    }
+
+    function normalizeBon(v) {
+
+      const s = (v || "").toString().trim().replace(/[^\d]/g, "");
+      return s ? (s.replace(/^0+/, "") || "0") : "";
+    }
+
+    function parseBonsFromFeuille(text) {
+      const parts = String(text || "")
+        .split(/[\n,; \t\r]+/g)
+        .map(s => normalizeBon(s))
+        .filter(Boolean);
+
+      const seen = new Set();
+      const out = [];
+      for (const b of parts) {
+        if (b.length < 6) continue;
+        if (!seen.has(b)) { seen.add(b); out.push(b); }
+      }
+      return out;
+    }
+
+    // Récupère une position une seule fois. Si refusé/indispo => retourne null (on livre quand même).
+    function getGpsOnce(opts) {
+      return new Promise((resolve) => {
+        try {
+          logi('getGpsOnce()');
+          if (!navigator.geolocation) { logi('❌ navigator.geolocation absent'); return resolve(null); }
+
+          if (!navigator.geolocation) return resolve(null);
+          const options = Object.assign({ enableHighAccuracy: true, timeout: 8000, maximumAge: 15000 }, (opts||{}));
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              const c = pos && pos.coords;
+              logi('✅ GPS OK');
+              try { logi('lat=' + c.latitude + ' lng=' + c.longitude + ' acc=' + c.accuracy); } catch(e) {}
+
+              if (!c) return resolve(null);
+              resolve({
+                gpsLat: c.latitude,
+                gpsLng: c.longitude,
+                gpsAcc: c.accuracy,
+                gpsTs: pos.timestamp || Date.now()
+              });
+            },
+            (err) => {
+              logi('❌ GPS erreur ' + (err && err.code) + ' ' + (err && err.message));
+              resolve(null);
+            },
+            options
+          );
+        } catch(e) {
+          resolve(null);
+        }
+      });
+    }
+
+function refreshColisHeader() {
+
+  if (tourneeNavetteTxt) tourneeNavetteTxt.textContent = (tournee || codeTournee || tourneeNavette || "—");
+  if (livreurTxt) livreurTxt.textContent = livreurId || "—";
+  if (magasinTxt) magasinTxt.textContent = magasinNavette || "—";
+}
+
+    refreshColisHeader();
+
+async function apiPost(url, body, opts) {
+  const fullUrl = apiUrl(url);
+  const options = opts && typeof opts === "object" ? opts : {};
+  const r = await fetch(fullUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body || {}),
+    keepalive: !!options.keepalive
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || j.success === false) {
+    console.warn("[API] Erreur", { url: fullUrl, status: r.status, statusText: r.statusText, body: j });
+    throw new Error(j.error || j.message || "Erreur API");
+  }
+  return j;
+}
+
+async function apiGet(url) {
+  const fullUrl = apiUrl(url);
+  const r = await fetch(fullUrl);
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || j.success === false) {
+    console.warn("[API] Erreur", { url: fullUrl, status: r.status, statusText: r.statusText, body: j });
+    throw new Error(j.error || j.message || "Erreur API");
+  }
+  return j;
+}
+
+    async function getActiveTourneeId() {
+      if (!magasinNavette) return "";
+      const j = await apiGet(`/api/navette/active?magasin=${encodeURIComponent(magasinNavette)}`);
+      return String((j && j.tourneeId) || "");
+    }
+
+    function renderList(list) {
+      if (!listeColisEl) return;
+      if (!Array.isArray(list) || list.length === 0) {
+        listeColisEl.innerHTML = "";
+        return;
+      }
+      listeColisEl.innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:6px">
+          ${list.slice(0, 250).map(it => `
+            <div style="display:flex;justify-content:space-between;gap:10px;padding:8px 10px;border:1px solid #eee;border-radius:10px">
+              <b>${it.bon || ""}</b>
+              <span>${it.statut || ""}</span>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    async function refreshLivreurList() {
+      if (!restantsEl) return;
+      if (!livreurId) {
+        restantsEl.textContent = "0";
+        renderList([]);
+        return;
+      }
+
+      const toLocalYMD = (d) => {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return `${y}-${m}-${day}`;
+      };
+
+      const isTodayLocal = (isoOrStr) => {
+        if (!isoOrStr) return false;
+        const d = new Date(String(isoOrStr));
+        if (isNaN(d)) return false;
+        return toLocalYMD(d) === toLocalYMD(new Date());
+      };
+
+      try {
+        tourneeNavette = tourneeNavette || (await getActiveTourneeId());
+      } catch(e){}
+
+      const j = await apiGet(`/api/navette/livreur?tourneeId=${encodeURIComponent(tourneeNavette||"")}&magasin=${encodeURIComponent(magasinNavette)}&livreurId=${encodeURIComponent(livreurId)}`);
+
+      const rawList = j.colis || [];
+      const listToday = rawList.filter(it => isTodayLocal(it.dateMaj || it.dateAjout));
+
+      const restantsToday = listToday.filter(x => String(x.statut).toUpperCase() !== "LIVRE").length;
+      restantsEl.textContent = String(restantsToday);
+
+      if (listToday.length === 0) {
+        renderList([]);
+        if (rawList.length > 0) {
+          setColisMsg("ℹ️ Aucun colis du jour à afficher (les colis d’hier sont masqués).", false);
+        } else {
+          setColisMsg("ℹ️ Feuille importée. Scanne les colis avec « Scanner colis à charger » pour les affecter au livreur.", false);
+        }
+        return;
+      }
+
+      if (restantsToday <= 0) {
+        renderList([]);
+        setColisMsg("✅ Tout est livré (colis du jour) • liste masquée", false);
+        return;
+      }
+
+      renderList(listToday);
+    }
+
+    const scanModal = document.getElementById("scanModal");
+    const scanTitle = document.getElementById("scanTitle");
+    const btnCloseScan = document.getElementById("btnCloseScan");
+    const btnScanFeuille = document.getElementById("btnScanFeuille");
+    const btnScanCharger = document.getElementById("btnScanCharger");
+    const btnScanLivrer = document.getElementById("btnScanLivrer");
+
+    const multiPanel = document.getElementById("multiPanel");
+    const multiPanelTitle = document.getElementById("multiPanelTitle");
+    const multiPanelCount = document.getElementById("multiPanelCount");
+    const multiPanelList = document.getElementById("multiPanelList");
+    const btnMultiValidate = document.getElementById("btnMultiValidate");
+    const btnMultiClear = document.getElementById("btnMultiClear");    const multiModalInfo = document.getElementById("multiModalInfo");
+    const multiCount = document.getElementById("multiCount");
+    const multiModalList = document.getElementById("multiModalList");
+
+    let multiMode = null;
+    let multiBons = [];
+    let multiSeen = new Set();
+
+    function showMultiPanel(show) {
+      if (multiPanel) multiPanel.style.display = show ? "block" : "none";
+    }
+
+    function renderMulti() {
+      const n = multiBons.length;
+      if (multiPanelCount) multiPanelCount.textContent = String(n);
+      if (multiCount) multiCount.textContent = String(n);
+
+      const renderTags = (container, isModal) => {
+        if (!container) return;
+        if (!n) { container.innerHTML = isModal ? "<i>Aucun colis scanné</i>" : ""; return; }
+        if (isModal) {
+          container.innerHTML = `
+            <div style="display:flex;flex-wrap:wrap;gap:8px">
+              ${multiBons.slice(0, 200).map(b => `
+                <span class="multiTag">${b}</span>
+              `).join("")}
+            </div>
+          `;
+        } else {
+          container.innerHTML = multiBons.slice(0, 200).map(b => `
+            <span class="multiTag">${b}
+              <button type="button" aria-label="Retirer ${b}" data-bon="${b}">✕</button>
+            </span>
+          `).join("");
+
+          container.querySelectorAll("button[data-bon]").forEach(btn => {
+            btn.addEventListener("click", () => {
+              const bon = btn.getAttribute("data-bon");
+              if (!bon) return;
+              multiBons = multiBons.filter(x => x !== bon);
+              multiSeen = new Set(multiBons);
+              renderMulti();
+            });
+          });
+        }
+      };
+
+      renderTags(multiPanelList, false);
+      renderTags(multiModalList, true);
+
+      showMultiPanel(!!multiMode);
+    }
+
+    function clearMulti() {
+      multiBons = [];
+      multiSeen = new Set();
+      renderMulti();
+    }
+
+    function addBonToMulti(txt) {
+      const bon = normalizeBon(txt);
+      if (!bon) { setColisMsg("❌ QR colis invalide", true); return; }
+
+      if (multiSeen.has(bon)) {
+        setColisMsg(`ℹ️ Déjà scanné : ${bon}`, false);
+        try { navigator.vibrate && navigator.vibrate([20, 40, 20]); } catch(e){}
+        return;
+      }
+      multiSeen.add(bon);
+      multiBons.push(bon);
+      renderMulti();
+      setColisMsg(`➕ Ajouté : ${bon}`, false);
+      try { navigator.vibrate && navigator.vibrate(35); } catch(e){}
+    }
+
+        
+    async function validateMulti() {
+      if (!multiMode) { setColisMsg("ℹ️ Lance d’abord un scan multi.", false); return; }
+      if (!magasinNavette) { setColisMsg("❌ Magasin manquant", true); return; }
+      if (!livreurId) { setColisMsg("❌ Livreur manquant (URL: ?livreurId=...)", true); return; }
+      if (!multiBons.length) { setColisMsg("ℹ️ Aucun colis à valider.", false); return; }
+
+      setScanButtonsDisabled(true);
+      setScanLoading(true, "Préparation…");
+
+      try { if (html5Qr) await html5Qr.stop(); } catch(e) {}
+      if (scanModal) scanModal.style.display = "none";
+
+      let currentTourneeId = tourneeNavette || "";
+      if (!currentTourneeId) {
+        try { currentTourneeId = await getActiveTourneeId(); } catch(e){}
+      }
+
+      let gps = null;
+      if (multiMode === "livrer") {
+        try {
+          const st = JSON.parse(localStorage.getItem("NAVETTE_LAST_GPS") || "null");
+          if (st && st.gpsLat && st.gpsLng && st.gpsTs && (Date.now() - Number(st.gpsTs)) < 5*60*1000) {
+            gps = st;
+          }
+        } catch(e){}
+        if (!gps) {
+          setScanLoading(true, "GPS…");
+          gps = await getGpsOnce({ timeout: 1500, maximumAge: 600000 });
+          if (gps && gps.gpsLat && gps.gpsLng) {
+            try { localStorage.setItem("NAVETTE_LAST_GPS", JSON.stringify(gps)); } catch(e){}
+          }
+        }
+      }
+
+      const payload = {
+        mode: multiMode,
+        tourneeId: currentTourneeId,
+        magasin: magasinNavette,
+        livreurId,
+        tournee: (tournee || ""),
+        codeTournee: (codeTournee || ""),
+        bons: multiBons.slice()
+      };
+
+      if (gps && gps.gpsLat && gps.gpsLng) {
+        payload.gpsLat = gps.gpsLat;
+        payload.gpsLng = gps.gpsLng;
+        if (gps.gpsAcc != null) payload.gpsAcc = gps.gpsAcc;
+        if (gps.gpsTs != null)  payload.gpsTs  = gps.gpsTs;
+      }
+
+      setScanLoading(true, "Envoi…");
+      let queuedOk = false;
+
+      try {
+        if (navigator.sendBeacon) {
+          const blob = new Blob([JSON.stringify(payload)], { type: "application/json" });
+          queuedOk = navigator.sendBeacon("/api/navette/bulk", blob);
+        }
+      } catch(e) {}
+
+      if (!queuedOk) {
+        const j = await apiPost("/api/navette/bulk", payload, { keepalive: true });
+        if (!j || j.success !== true) throw new Error((j && (j.error || j.message)) || "bulk failed");
+      }
+
+
+      const sentBons = multiBons.slice();
+      const sentCount = sentBons.length;
+
+      // On vide la liste de scan immédiatement (évite les doubles envois)
+      multiBons = [];
+      multiSeen = new Set();
+      renderMulti();
+      setScanLoading(false);
+      setScanButtonsDisabled(false);
+
+      setColisMsg(`✅ Envoi lancé (${sentCount} colis).`, false);
+      try { navigator.vibrate && navigator.vibrate([40, 30, 40]); } catch(e){}
+
+      // 🔎 Après une livraison : demande une preuve photo (optionnel)
+      if (multiMode === "livrer" && sentBons.length) {
+        openProofModal({
+          tourneeId: currentTourneeId || "",
+          magasin: magasinNavette || "",
+          livreurId: livreurId || "",
+          tournee: (tournee || ""),
+          codeTournee: (codeTournee || ""),
+          bons: sentBons
+        });
+      }
+
+    }
+
+
+// ---- Preuve photo (après livraison) ----
+const photoModal   = document.getElementById("photoModal");
+const photoInput   = document.getElementById("photoInput");
+const photoPreview = document.getElementById("photoPreview");
+const photoInfo    = document.getElementById("photoInfo");
+const photoMsg     = document.getElementById("photoMsg");
+const btnSendPhoto = document.getElementById("btnSendPhoto");
+const btnSkipPhoto = document.getElementById("btnSkipPhoto");
+const btnClosePhoto= document.getElementById("btnClosePhoto");
+
+let proofCtx = null; // {tourneeId, magasin, livreurId, tournee, codeTournee, bons[]}
+
+function setPhotoMsg(t, isErr=false){
+  if (!photoMsg) return;
+  photoMsg.textContent = t || "";
+  photoMsg.style.display = t ? "block" : "none";
+  photoMsg.className = "msg " + (isErr ? "err" : "ok");
+}
+
+function openProofModal(ctx){
+  proofCtx = ctx || null;
+  setPhotoMsg("", false);
+
+  // reset
+  if (photoInput) photoInput.value = "";
+  if (photoPreview) { photoPreview.src=""; photoPreview.style.display="none"; }
+
+  const n = (ctx && Array.isArray(ctx.bons)) ? ctx.bons.length : 0;
+  if (photoInfo) {
+    photoInfo.innerHTML =
+      `Colis livrés : <b>${n}</b><br>` +
+      `Tournée : <b>${(ctx.tournee || ctx.tourneeId || "—")}</b> • Livreur : <b>${ctx.livreurId || "—"}</b><br>` +
+      `<span class="pill">Photo associée à la liste</span>`;
+  }
+  if (photoModal) photoModal.style.display = "block";
+}
+
+async function closeProofModal(){
+  if (photoModal) photoModal.style.display = "none";
+  proofCtx = null;
+}
+
+async function sendProofPhoto(){
+  if (!proofCtx) { setPhotoMsg("❌ Contexte manquant (liste des colis).", true); return; }
+  const file = photoInput && photoInput.files ? photoInput.files[0] : null;
+  if (!file) { setPhotoMsg("ℹ️ Choisis/Prends une photo avant d’envoyer.", true); return; }
+
+  btnSendPhoto.disabled = true;
+  const old = btnSendPhoto.textContent;
+  btnSendPhoto.textContent = "Envoi…";
+
+  try{
+    const fd = new FormData();
+    fd.append("photo", file, file.name || "preuve.jpg");
+    fd.append("tourneeId", proofCtx.tourneeId || "");
+    fd.append("magasin", proofCtx.magasin || "");
+    fd.append("livreurId", proofCtx.livreurId || "");
+    fd.append("tournee", proofCtx.tournee || "");
+    fd.append("codeTournee", proofCtx.codeTournee || "");
+    fd.append("bons", JSON.stringify(proofCtx.bons || []));
+
+    const r = await fetch(apiUrl("/api/navette/proof-photo"), { method:"POST", body: fd });
+    const j = await r.json().catch(()=>({}));
+    
+    // Si c'est mis en queue (status 202), on ferme immédiatement
+    if (r.status === 202 && j.queued) {
+      setPhotoMsg("✅ Photo en cours d'envoi en arrière-plan...", false);
+      try { navigator.vibrate && navigator.vibrate([60, 40, 60]); } catch(e){}
+      
+      // Fermer immédiatement sans attendre
+      setTimeout(() => closeProofModal(), 400);
+      return;
+    }
+    
+    // Ancien comportement pour compatibilité (si pas queued)
+    if (!r.ok || j.success === false) throw new Error(j.error || j.message || "Erreur upload");
+
+    setPhotoMsg("✅ Photo envoyée et liée aux colis.", false);
+    try { navigator.vibrate && navigator.vibrate([60, 40, 60]); } catch(e){}
+
+    // On peut refermer automatiquement
+    setTimeout(() => closeProofModal(), 600);
+  }catch(e){
+    setPhotoMsg("❌ " + (e && e.message ? e.message : e), true);
+  }finally{
+    btnSendPhoto.disabled = false;
+    btnSendPhoto.textContent = old;
+  }
+}
+
+if (photoInput) {
+  photoInput.addEventListener("change", () => {
+    setPhotoMsg("", false);
+    const f = photoInput.files && photoInput.files[0];
+    if (!f) return;
+    const url = URL.createObjectURL(f);
+    if (photoPreview) {
+      photoPreview.src = url;
+      photoPreview.style.display = "block";
+    }
+  });
+}
+
+const btnCapturePhoto = document.getElementById("btnCapturePhoto");
+if (btnCapturePhoto) {
+  btnCapturePhoto.addEventListener("click", () => {
+    if (photoInput) photoInput.click();
+  });
+}
+
+if (btnSendPhoto) btnSendPhoto.addEventListener("click", () => sendProofPhoto());
+if (btnSkipPhoto) btnSkipPhoto.addEventListener("click", () => closeProofModal());
+if (btnClosePhoto) btnClosePhoto.addEventListener("click", () => closeProofModal());
+
+
+function startMultiScan(mode) {
+      multiMode = mode;
+      clearMulti();
+      if (multiPanelTitle) multiPanelTitle.textContent = (mode === "charger") ? "Colis à CHARGER (multi-scan)" : "Colis à LIVRER (multi-scan)";
+      renderMulti();
+    }
+
+    let html5Qr = null;
+    let onScanResult = null;
+
+    
+    // Amélioration scan code-barres (focus/zoom + formats)
+    const SCAN_FORMATS = (typeof Html5QrcodeSupportedFormats !== "undefined") ? [
+      Html5QrcodeSupportedFormats.QR_CODE,
+      Html5QrcodeSupportedFormats.CODE_128,
+      Html5QrcodeSupportedFormats.CODE_39,
+      Html5QrcodeSupportedFormats.EAN_13,
+      Html5QrcodeSupportedFormats.EAN_8,
+      Html5QrcodeSupportedFormats.ITF,
+      Html5QrcodeSupportedFormats.UPC_A,
+      Html5QrcodeSupportedFormats.UPC_E
+    ] : undefined;
+
+    function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+
+    async function tuneCameraAfterStart({ zoomHint = 1.7 } = {}) {
+      try {
+        const video = document.querySelector("#qr-reader video");
+        if (!video || !video.srcObject) return;
+
+        const stream = video.srcObject;
+        const track = stream.getVideoTracks && stream.getVideoTracks()[0];
+        if (!track) return;
+
+        const caps = track.getCapabilities ? track.getCapabilities() : null;
+
+        // Focus continu si dispo
+        if (caps && caps.focusMode && Array.isArray(caps.focusMode) && caps.focusMode.includes("continuous")) {
+          try { await track.applyConstraints({ advanced: [{ focusMode: "continuous" }] }); } catch(e){}
+        }
+
+        // Petit zoom si dispo (utile pour code-barres)
+        if (caps && typeof caps.zoom === "object") {
+          const zmin = (caps.zoom.min != null) ? caps.zoom.min : 1;
+          const zmax = (caps.zoom.max != null) ? caps.zoom.max : 3;
+          const z = clamp(zoomHint, zmin, zmax);
+          try { await track.applyConstraints({ advanced: [{ zoom: z }] }); } catch(e){}
+        }
+      } catch(e) {
+        // silencieux
+      }
+    }
+
+async function openScanner(title, cb, opts) {
+      onScanResult = cb;
+      const options = opts || {};
+      const multi = !!options.multi;
+
+      setScanLoading(false);
+      setColisMsg("", false);
+      if (scanTitle) scanTitle.textContent = title;
+
+      if (multiModalInfo) multiModalInfo.style.display = multi ? "block" : "none";
+      if (scanModal) scanModal.style.display = "block";
+
+      if (!html5Qr) html5Qr = new Html5Qrcode("qr-reader");
+
+      let lastTxt = "";
+      let lastTs = 0;
+
+      
+      const scanCfg = {
+        fps: 15,
+        // zone de scan plus large (meilleur pour code-barres)
+        qrbox: (viewfinderWidth, viewfinderHeight) => {
+          const w = Math.floor(Math.min(viewfinderWidth * 0.92, 420));
+          const h = Math.floor(Math.min(viewfinderHeight * 0.28, 180));
+          return { width: w, height: h };
+        },
+        aspectRatio: 16 / 9,
+        disableFlip: true,
+        experimentalFeatures: { useBarCodeDetectorIfSupported: true }
+      };
+
+      if (SCAN_FORMATS) scanCfg.formatsToSupport = SCAN_FORMATS;
+
+      await html5Qr.start(
+        { facingMode: "environment" },
+        scanCfg,
+        async (decodedText) => {
+          const txt = String(decodedText || "");
+          const now = Date.now();
+          if (txt === lastTxt && (now - lastTs) < 1200) return;
+          lastTxt = txt; lastTs = now;
+
+          if (!multi) {
+            closeScanner().finally(() => {
+              if (onScanResult) onScanResult(txt);
+            });
+          } else {
+            if (onScanResult) onScanResult(txt);
+          }
+        },
+        () => {}
+      );
+
+      // Laisse le temps à la vidéo de démarrer puis ajuste focus/zoom si possible
+      setTimeout(() => { tuneCameraAfterStart({ zoomHint: 1.7 }); }, 180);
+    }
+
+    async function closeScanner() {
+      try { if (html5Qr) await html5Qr.stop(); } catch(e){}
+      if (scanModal) scanModal.style.display = "none";
+    }
+    if (btnCloseScan) btnCloseScan.addEventListener("click", closeScanner);
+
+    function hookMulti(btn) {
+      if (!btn) return;
+      btn.addEventListener("click", () => {
+        validateMulti().catch(e => setColisMsg("❌ " + (e && e.message ? e.message : e), true));
+      });
+    }
+    function hookClear(btn) {
+      if (!btn) return;
+      btn.addEventListener("click", () => clearMulti());
+    }
+    hookMulti(btnMultiValidate);    hookClear(btnMultiClear);    if (btnScanFeuille) {
+      btnScanFeuille.addEventListener("click", async () => {
+        try {
+          if (!magasinNavette) { setColisMsg("❌ Magasin manquant (URL: ?magasin=...)", true); return; }
+
+          await openScanner("Scanner feuille d’émargement", async (txt) => {
+            try {
+              const bons = parseBonsFromFeuille(txt);
+              if (!bons.length) { setColisMsg("❌ QR feuille : aucune liste de bons détectée", true); return; }
+
+              setScanLoading(true, "Import de la feuille en cours...");
+              setScanButtonsDisabled(true);
+              const j = await apiPost("/api/navette/import", { magasin: magasinNavette, bons: txt, tournee: (tournee||"") || (tournee||""), codeTournee: codeTournee||"" });
+
+              tourneeNavette = j.tourneeId || j.tournee || tourneeNavette;
+              try { localStorage.setItem("NAVETTE_TOURNEE_" + magasinNavette, tourneeNavette); } catch(e){}
+              refreshColisHeader();
+
+              setScanLoading(false);
+              setScanButtonsDisabled(false);
+              setColisMsg(`✅ Feuille importée • tournée ${tourneeNavette} • +${j.added || 0} ajoutés`, false);
+              await refreshLivreurList();
+            } catch (e) {
+              setScanLoading(false);
+              setScanButtonsDisabled(false);
+              setScanLoading(false);
+              setScanButtonsDisabled(false);
+              setColisMsg("❌ " + e.message, true);
+            }
+          });
+        } catch (e) {
+          setScanLoading(false);
+              setScanButtonsDisabled(false);
+              setColisMsg("❌ " + e.message, true);
+        }
+      });
+    }
+
+    if (btnScanCharger) {
+      btnScanCharger.addEventListener("click", async () => {
+        try {
+          if (!magasinNavette) { setColisMsg("❌ Magasin manquant", true); return; }
+          if (!livreurId) { setColisMsg("❌ Livreur manquant (URL: ?livreurId=...)", true); return; }
+
+          startMultiScan("charger");
+          await openScanner("Scanner colis à charger (multi)", (txt) => addBonToMulti(txt), { multi: true });
+        } catch (e) {
+          setScanLoading(false);
+          setScanButtonsDisabled(false);
+          setColisMsg("❌ " + e.message, true);
+        }
+      });
+    }
+
+    if (btnScanLivrer) {
+      btnScanLivrer.addEventListener("click", async () => {
+        try {
+          if (!magasinNavette) { setColisMsg("❌ Magasin manquant", true); return; }
+          if (!livreurId) { setColisMsg("❌ Livreur manquant (URL: ?livreurId=...)", true); return; }
+
+          startMultiScan("livrer");
+          await openScanner("Scanner colis livrer (multi)", (txt) => addBonToMulti(txt), { multi: true });
+        } catch (e) {
+          setScanLoading(false);
+          setScanButtonsDisabled(false);
+          setColisMsg("❌ " + e.message, true);
+        }
+      });
+    }
+
+    setInterval(() => {
+      refreshLivreurList().catch(() => {});
+    }, 4000);
+
+    refreshLivreurList().catch(() => {});
+  </script>
+
+<script>
+
+  function logi(msg){  }
+</script>
+
+</body>
+</html>

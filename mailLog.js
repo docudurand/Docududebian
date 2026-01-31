@@ -1,0 +1,86 @@
+// journalisation des emails via Google Apps Script
+
+const GS_URL = process.env.GS_MAIL_LOG_URL || "";
+const TIMEOUT = Number(process.env.GS_MAIL_LOG_TIMEOUT_MS || 15000);
+
+// sans URL, on ne peut pas logger
+function assertConfigured() {
+  if (!GS_URL) {
+    throw new Error("[MAIL_LOG] GS_MAIL_LOG_URL manquant (Apps Script Web App).");
+  }
+}
+
+// Petit helper pour timeout des requetes
+function withTimeout(ms) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  return { ctrl, clear: () => clearTimeout(t) };
+}
+
+// Requete HTTP qui renvoie du JSON
+async function httpJson(url, options = {}) {
+  const { ctrl, clear } = withTimeout(TIMEOUT);
+  try {
+    const res = await fetch(url, { ...options, signal: ctrl.signal });
+    const text = await res.text();
+    let data;
+    try { data = JSON.parse(text); } catch { data = { raw: text }; }
+    if (!res.ok) {
+      throw new Error(`[MAIL_LOG] HTTP ${res.status} ${res.statusText} :: ${text}`.slice(0, 500));
+    }
+    return data;
+  } finally {
+    clear();
+  }
+}
+
+// Ajoute une ligne de log (envoi reussi ou echoue)
+export async function addMailLog(entry) {
+  assertConfigured();
+  const payload = { action: "appendMailLog", entry };
+  return httpJson(GS_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json; charset=utf-8" },
+    body: JSON.stringify(payload),
+  });
+}
+
+// Liste des logs (avec filtre optionnel)
+export async function getMailLogs({ limit = 200, q = "" } = {}) {
+  assertConfigured();
+  const u = new URL(GS_URL);
+  u.searchParams.set("action", "listMailLogs");
+  u.searchParams.set("limit", String(limit));
+  if (q) u.searchParams.set("q", q);
+  return httpJson(u.toString(), { method: "GET" });
+}
+
+// Envoie un mail ET cree un log (success/fail)
+export async function sendMailWithLog(transporter, mailOptions, formType, meta = {}, opts = {}) {
+  const { logFailed = true } = opts || {};
+
+  const toField = Array.isArray(mailOptions?.to) ? mailOptions.to.join(",") : (mailOptions?.to || "");
+  const subject = String(mailOptions?.subject || "");
+
+  const base = {
+    ts: new Date().toISOString(),
+    to: String(toField || ""),
+    subject,
+    formType: String(formType || "unknown"),
+    meta,
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    await addMailLog({ ...base, status: "sent", messageId: info?.messageId || "" });
+    return info;
+  } catch (err) {
+    const msg = String(err?.message || err);
+    if (logFailed) {
+      try {
+        await addMailLog({ ...base, status: "failed", error: msg });
+      } catch {}
+    }
+    throw err;
+  }
+}

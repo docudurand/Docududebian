@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<!--fournisseurs VL-->
+
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<title>Fournisseur VL</title>
+<link href="../assets/style.css" rel="stylesheet"/>
+<link href="/assets/icons/favicon.ico" rel="icon" sizes="any"/>
+<link href="/assets/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="/assets/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="/assets/icons/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="/site.webmanifest" rel="manifest"/>
+<meta content="#e9efff" name="theme-color"/>
+<style>
+    html{ scroll-behavior:smooth; }
+    .ds-page{ padding: 22px 22px 40px; background:#fff; }
+    .ds-layout{
+      display:grid;
+      grid-template-columns: 220px 1fr;
+      gap: 28px;
+      align-items:start;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .ds-sidenav{
+      position: sticky;
+      top: calc(var(--header-h, 74px) + 18px);
+      align-self:start;
+      padding-top: 6px;
+    }
+    .ds-navlink{
+      display:block;
+      padding: 10px 0;
+      text-decoration:none;
+      color:#6b6f7a;
+      font-weight: 700;
+      letter-spacing:.2px;
+      text-transform: uppercase;
+      font-size: 14px;
+    }
+    .ds-navlink:hover{ color:#1e2f57; }
+    .ds-title{
+      text-align:center;
+      font-size: clamp(34px, 3vw, 54px);
+      letter-spacing: 2px;
+      margin: 18px 0 34px;
+      color:#1d2336;
+      font-weight: 400;
+    }
+    .ds-subtitle{
+      margin: 28px 0 10px;
+      font-size: 12px;
+      letter-spacing:.6px;
+      text-transform: uppercase;
+      color:#1d2336;
+      font-weight: 800;
+    }
+    .ds-anchor{ scroll-margin-top: calc(var(--header-h, 74px) + 18px); }
+    .table-wrap{ width:100%; overflow-x:visible; }
+    .ds-table{
+      width:100%;
+      border-collapse: collapse;
+      min-width: 0; table-layout: fixed;
+      background:#fff;
+    }
+    .ds-table th, .ds-table td{
+      border: 1px solid rgba(0,0,0,.14);
+      padding: 12px 12px;
+      vertical-align: top;
+      font-size: 13px;
+    }
+    .ds-table th{
+      background:#f4f6fb;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing:.4px;
+      font-size: 12px;
+    }
+    .ds-table td:nth-child(2), .ds-table td:nth-child(3){
+      text-align:center;
+      white-space: nowrap;
+    }
+    .ds-placeholder{
+      border:1px dashed rgba(0,0,0,.25);
+      border-radius: 12px;
+      padding: 16px;
+      background:#fafbff;
+      color:#333;
+    }
+
+    @media (max-width: 980px){
+      .ds-layout{ grid-template-columns: 180px 1fr; gap: 18px; }
+      .ds-page{ padding: 18px 14px 28px; }
+    }
+    @media (max-width: 760px){
+      .ds-layout{ grid-template-columns: 1fr; }
+      .ds-sidenav{
+        position: static;
+        display:flex;
+        gap: 14px;
+        flex-wrap: wrap;
+        justify-content: center;
+        border-bottom: 1px solid rgba(0,0,0,.10);
+        padding-bottom: 10px;
+        margin-bottom: 10px;
+      }
+      .ds-navlink{ padding: 6px 10px; border-radius: 999px; background:#eef0ff; }
+      .ds-table{ min-width: 720px; }
+    }
+  
+
+    .ds-section{ max-width: 1100px; margin: 0 auto 38px; }
+    .ds-subtitle{ margin: 10px 0 14px; font-size: 14px; letter-spacing:.35px; color:#333; text-transform: uppercase; }
+    .ds-table th, .ds-table td{ word-break: break-word; }
+    .supplier-link{ color: var(--link, #2a46ff); text-decoration: none; font-weight: 700; }
+    .supplier-link:hover{ text-decoration: underline; }
+    .hub-table td{ font-weight: 700; font-size: 16px; padding: 14px 16px; }
+    @media (max-width: 900px){
+      .table-wrap{ overflow-x:auto; }
+      .ds-table{ table-layout:auto; }
+    }
+
+    .ds-anchor{ max-width:1100px; margin:0 auto 38px; }
+    .depot-wrap{ max-width:1100px; margin: 0 auto; padding: 20px 0 30px; }
+    .depot-group{ display:grid; grid-template-columns: 180px 1fr; column-gap: 40px; align-items:start; margin: 34px 0; }
+    .depot-label{ font-weight:800; letter-spacing:.5px; }
+    .depot-table{ border-collapse: collapse; }
+    .depot-table td{ padding: 8px 0; font-weight:700; }
+    .depot-name{ width: 260px; padding-right: 30px; }
+    .depot-code{ text-align:left; }
+    @media (max-width: 700px){
+      .depot-group{ grid-template-columns: 1fr; row-gap: 10px; }
+      .depot-name{ width:auto; padding-right: 18px; }
+    }
+    </style>
+</head>
+<body>
+<header class="topbar">
+<div class="brand-left">
+<a aria-label="Retour à l'accueil" class="brand-link" href="/index.html">
+<img alt="Documents Durand" src="https://raw.githubusercontent.com/docudurand/mes-formulaires/main/logo2.png"/>
+</a>
+</div>
+<nav aria-label="Menus" class="nav">
+<div class="menu" data-menu="pl">
+<button class="menu-btn" type="button">MENU PL</button>
+<div aria-label="Menu PL" class="dropdown" role="menu">
+<a href="../pl/formulaire-creation-reference-pl.html" role="menuitem">FORMULAIRE CREATION REFERENCE PL</a>
+<a href="../pl/fournisseur-pl.html" rel="noopener" role="menuitem">FOURNISSEUR PL</a>
+<a href="../pl/liens-garantie-retour-pl.html" role="menuitem">LIENS FORMULAIRE GARANTIE ET RETOUR PL</a>
+</div>
+</div>
+<div class="menu is-active" data-menu="vl">
+<button class="menu-btn" type="button">MENU VL</button>
+<div aria-label="Menu VL" class="dropdown" role="menu">
+<a href="../vl/formulaire-creation-reference-vl.html" role="menuitem">FORMULAIRE CREATION REFERENCE VL / VUL</a>
+<a href="../vl/formulaire-creation-reference-pneumatique.html" role="menuitem">FORMULAIRE CREATION PNEUMATIQUE</a>
+<a href="../vl/fournisseur-vl.html" rel="noopener" role="menuitem">FOURNISSEUR VL</a>
+<a href="../vl/retour-fournisseur-garantie-vl.html" rel="noopener" role="menuitem">RETOUR FOURNISSEUR ET GARANTIE VL</a>
+<a href="../vl/liens-formulaire-garantie.html" role="menuitem">LIENS FORMULAIRE GARANTIE VL</a>
+</div>
+</div>
+<div class="menu" data-menu="util">
+<button class="menu-btn" type="button">UTILITAIRE</button>
+<div aria-label="Menu Utilitaire" class="dropdown" role="menu">
+<a href="../utilitaire/pret-vehicule.html" rel="noopener" role="menuitem">PRET VEHICULE</a>
+<a href="../utilitaire/demande-ramasse.html" rel="noopener" role="menuitem">DEMANDE RAMASSE</a>
+<a href="../utilitaire/suivi-kilometrique-chauffeur.html" role="menuitem">SUIVI KILOMETRIQUE CHAUFFEUR TEST</a>
+<a href="../utilitaire/castrol.html" role="menuitem">CASTROL</a>
+<a href="../utilitaire/site-identification-oe.html" role="menuitem">SITE IDENTIFIANT OE</a>
+<a href="../utilitaire/contact-fournisseur.html" role="menuitem">CONTACTS FOURNISSEURS</a>
+<a href="../utilitaire/reference-compliques.html" role="menuitem">REFERENCE COMPLIQUES</a>
+</div>
+</div>
+<div class="menu" data-menu="atelier">
+<button class="menu-btn" type="button">ATELIER</button>
+<div aria-label="Menu Atelier" class="dropdown" role="menu">
+<a href="../docatelier/service-atelier-demande.html" role="menuitem">SERVICE ATELIER</a>
+<a href="../docatelier/documents-atelier.html" role="menuitem">DOCUMENTS ATELIER</a>
+</div>
+</div>
+<div class="menu" data-menu="garantie">
+<a class="menu-btn menu-link" href="../gestion-garantie.html">GESTION GARANTIE</a>
+</div>
+</nav>
+<div class="brand-right">
+<img alt="Durand Services" src="https://raw.githubusercontent.com/docudurand/mes-formulaires/main/durand_services_logo.png"/>
+</div>
+</header>
+<div class="subbar"></div>
+<main class="wrap">
+<section class="card">
+<div class="content ds-page">
+<div class="ds-layout">
+<aside aria-label="Navigation fournisseur" class="ds-sidenav">
+<a class="ds-navlink" href="#fournisseur">FOURNISSEUR</a>
+<a class="ds-navlink" href="#liste-depot">LISTE DEPOT</a>
+<a class="ds-navlink" href="#code-back2car">CODE BACK 2 CAR</a>
+<a class="ds-navlink" href="#code-hub">CODE FOURNISSEUR HUB</a>
+</aside>
+<div class="ds-main">
+<section class="ds-anchor" id="fournisseur">
+<h1 class="ds-title">FOURNISSEUR</h1>
+<section class="ds-section" data-title="ACCESSOIRE / ECLAIRAGE / QUINCAILLERIE">
+<h2 class="ds-subtitle">ACCESSOIRE / ECLAIRAGE / QUINCAILLERIE</h2>
+<div class="table-wrap"><table class="ds-table"><thead><tr><th>Fournisseur</th><th>Délais</th><th>Heure limite</th><th>Infos</th></tr></thead><tbody><tr><td><a class="supplier-link" href="https://planet-line.com/" rel="noopener" target="_blank">PLANET LINE (1363)</a></td><td>24H</td><td></td><td>VIA MAG CHASSE</td></tr><tr><td><a class="supplier-link" href="https://www.silim.com/" rel="noopener" target="_blank">SILIM ACCESSOIRE RADIO (750)</a></td><td>24H</td><td></td><td>GTI</td></tr><tr><td><a class="supplier-link" href="https://eboutique.westfalia-automotive.com/fr-fr" rel="noopener" target="_blank">WESTFALIA (1089)</a></td><td>48H</td><td></td><td>FRAIS DE PORT</td></tr><tr><td>INTFRADIS (1125)</td><td></td><td></td><td></td></tr><tr><td><a class="supplier-link" href="https://www.equipiece.com/" rel="noopener" target="_blank">CHARNOUD EQUIPIECE (593)</a></td><td>24H</td><td></td><td>RAMASSE PAR CHASSIEU</td></tr></tbody></table></div>
+</section>
+<section class="ds-section" data-title="BATTERIE">
+<h2 class="ds-subtitle">BATTERIE</h2>
+<div class="table-wrap"><table class="ds-table"><thead><tr><th>Fournisseur</th><th>Délais</th><th>Heure limite</th><th>Infos</th></tr></thead><tbody><tr><td><a class="supplier-link" href="https://www.volteo-batteries.com/" rel="noopener" target="_blank">VOLTEO (5024)</a></td><td></td><td></td><td>RAMASSE PAR CHASSIEU</td></tr><tr><td>BATTERIE 69</td><td></td><td></td><td></td></tr><tr><td><a class="supplier-link" href="https://www.yuasa.fr/" rel="noopener" target="_blank">YUASA (2014)</a></td><td>24H</td><td></td><td>RAMASSE PAR PAVI (9044) AVANT 9H30 POUR LIVRAISON DANS LA JOURNEE</td></tr></tbody></table></div>
+</section>
+<section class="ds-section" data-title="COURROIE INDUSTRIELLE">
+<h2 class="ds-subtitle">COURROIE INDUSTRIELLE</h2>
+<div class="table-wrap"><table class="ds-table"><thead><tr><th>Fournisseur</th><th>Délais</th><th>Heure limite</th><th>Infos</th></tr></thead><tbody><tr><td><a class="supplier-link" href="https://www.guiffray-textile.fr/produit/produit.php?produit=52" rel="noopener" target="_blank">GUIFFRAY (6026)</a></td><td></td><td></td><td></td></tr></tbody></table></div>
+</section>
+<section class="ds-section" data-title="FILTRE SPECIAL TP ET CHARIOT">
+<h2 class="ds-subtitle">FILTRE SPECIAL TP ET CHARIOT</h2>
+<div class="table-wrap"><table class="ds-table"><thead><tr><th>Fournisseur</th><th>Délais</th><th>Heure limite</th><th>Infos</th></tr></thead><tbody><tr><td><a class="supplier-link" href="https://www.sf-filter.com/fr" rel="noopener" target="_blank">SF FILTER (1602)</a></td><td>48h</td><td></td><td>FRAIS DE PORT</td></tr><tr><td><a class="supplier-link" href="https://www.rhonadis.fr/" rel="noopener" target="_blank">RHONADIS (1828)</a></td><td></td><td></td><td>FRAIS DE PORT</td></tr><tr><td>FILGUARD</td><td></td><td></td><td></td></tr><tr><td>JURA FILTRATION</td><td></td><td></td><td></td></tr></tbody></table></div>
+</section>
+<section class="ds-section" data-title="FOURNISSEUR TOUTES PIECES">
+<h2 class="ds-subtitle">FOURNISSEUR TOUTES PIECES</h2>
+<div class="table-wrap"><table class="ds-table"><thead><tr><th>Fournisseur</th><th>Délais</th><th>Heure limite</th><th>Infos</th></tr></thead><tbody><tr><td>BARET (1092)</td><td>24H</td><td></td><td>RAMASSE CHASSIEU</td></tr><tr><td><a class="supplier-link" href="https://shop.bilsteingroup.com/app.do?m_gv_comp=home" rel="noopener" target="_blank">FERDINANT FEBI (1248)</a></td><td>24H</td><td>17H / 16H VENDREDI</td><td></td></tr><tr><td><a class="supplier-link" href="https://www.qhwebcat.com/fr/" rel="noopener" target="_blank">QH (971)</a></td><td>24H</td><td>17H</td><td>LIVRAISON</td></tr><tr><td><a class="supplier-link" href="https://www.seim.fr/fr" rel="noopener" target="_blank">SEIM (214)</a></td><td></td><td></td><td></td></tr><tr><td><a class="supplier-link" href="https://teccom.tecalliance.net/newapp/auth/welcome" rel="noopener" target="_blank">TECCOM</a></td><td>24H</td><td></td><td>GTI</td></tr><tr><td><a class="supplier-link" href="https://vehiclelifetimesolutions.schaeffler.fr/fr/luk-repset" rel="noopener" target="_blank">LUK SCHAEFFLER (1282)</a></td><td></td><td></td><td></td></tr><tr><td><a class="supplier-link" href="http://www.mgaweb.fr/" rel="noopener" target="_blank">MGA</a></td><td>24H</td><td></td><td>GTI</td></tr><tr><td><a class="supplier-link" href="https://www.nippon-pieces.com/" rel="noopener" target="_blank">NPS</a></td><td>24/48H</td><td></td><td></td></tr><tr><td><a class="supplier-link" href="https://www.japocat.fr/fr/" rel="noopener" target="_blank">JAPOCAT</a></td><td>24/48H</td><td></td><td></td></tr></tbody></table></div>
+</section>
+<section class="ds-section" data-title="HUILE / GRAISSE / ADDITIF">
+<h2 class="ds-subtitle">HUILE / GRAISSE / ADDITIF</h2>
+<div class="table-wrap"><table class="ds-table"><thead><tr><th>Fournisseur</th><th>Délais</th><th>Heure limite</th><th>Infos</th></tr></thead><tbody><tr><td><a class="supplier-link" href="https://www.yacco.com/fr/connexion" rel="noopener" target="_blank">YACCO (6537)</a></td><td></td><td></td><td></td></tr><tr><td><a class="supplier-link" href="https://www.mecatech-performances.com/fr_FR/" rel="noopener" target="_blank">MECATECH (1278)</a></td><td>24/48H</td><td></td><td>RAMASSE PAR CHASSE SUR RHONE</td></tr></tbody></table></div>
+</section>
+<section class="ds-section" data-title="JANTES">
+<h2 class="ds-subtitle">JANTES</h2>
+<div class="table-wrap"><table class="ds-table"><thead><tr><th>Fournisseur</th><th>Délais</th><th>Heure limite</th><th>Infos</th></tr></thead><tbody><tr><td><a class="supplier-link" href="https://webshop.rcsport-alcar.fr/wheelsportal/29/login" rel="noopener" target="_blank">RCSPORT (1310)</a></td><td>24H</td><td></td><td>RAMASSE BOURGOIN</td></tr><tr><td><a class="supplier-link" href="https://www.districash.com/" rel="noopener" target="_blank">DISTRI CASH (8788)</a></td><td>48h/72h</td><td></td><td></td></tr></tbody></table></div>
+</section>
+<section class="ds-section" data-title="MACHINE TOURNANTE CARDAN CREMAILLERE">
+<h2 class="ds-subtitle">MACHINE TOURNANTE CARDAN CREMAILLERE</h2>
+<div class="table-wrap"><table class="ds-table"><thead><tr><th>Fournisseur</th><th>Délais</th><th>Heure limite</th><th>Infos</th></tr></thead><tbody><tr><td><a class="supplier-link" href="https://catalogues.cevam.com/Catalogue_CEVAM/FR/Catalogue.wb?REFID=oAkBAAAAAAAoAcKWQdB2CLwoN4g" rel="noopener" target="_blank">CEVAM (1399)</a></td><td>24H</td><td>17H</td><td>CIBLEX FRAIS DE PORT</td></tr><tr><td><a class="supplier-link" href="https://www.groupe-dasilva.com/" rel="noopener" target="_blank">DA SILVA (1013)</a></td><td>24H</td><td>17H</td><td>FRAIS DE PORT 15 EUROS (FRANCO 200EURO)</td></tr><tr><td>DAPEX (Machine tournante) 1740</td><td>24H</td><td>18H</td><td>FRANCO 100E</td></tr><tr><td><a class="supplier-link" href="https://www.depa.fr/catalogue/" rel="noopener" target="_blank">DEPA (1072)</a></td><td>48H</td><td>12H</td><td>LIVRAISON FRAIS DE PORT 8E</td></tr></tbody></table></div>
+</section>
+<section class="ds-section" data-title="PARE BRISE">
+<h2 class="ds-subtitle">PARE BRISE</h2>
+<div class="table-wrap"><table class="ds-table"><thead><tr><th>Fournisseur</th><th>Délais</th><th>Heure limite</th><th>Infos</th></tr></thead><tbody><tr><td><a class="supplier-link" href="https://www.sekurit-service.com/fr-fr" rel="noopener" target="_blank">AUTOVERT (80)</a></td><td>24H</td><td>18H</td><td>LIVRAISON NUIT</td></tr><tr><td><a class="supplier-link" href="https://e.pilkington.com/" rel="noopener" target="_blank">PILKINGTHON (1244)</a></td><td>24H</td><td></td><td>RAMASSE PAR CHASSIEU</td></tr></tbody></table></div>
+</section>
+<section class="ds-section" data-title="PIECE CARROSSERIE">
+<h2 class="ds-subtitle">PIECE CARROSSERIE</h2>
+<div class="table-wrap"><table class="ds-table"><thead><tr><th>Fournisseur</th><th>Délais</th><th>Heure limite</th><th>Infos</th></tr></thead><tbody><tr><td><a class="supplier-link" href="https://www.carrosity.com/welcome" rel="noopener" target="_blank">ANIEL (1406)</a></td><td>48H</td><td></td><td>LIVRAISON FRAIS DE PORT</td></tr><tr><td>BACK TO CAR (1700)</td><td>48H</td><td></td><td>FRAIS DE PORT 10 E FRANCO 120 E</td></tr><tr><td>PREFERENCE CARROSSERIE (1589)</td><td>24H SI PETITE PIECE</td><td></td><td></td></tr></tbody></table></div>
+</section>
+<section class="ds-section" data-title="PIECE CULASSE JT MOTEUR TURBO">
+<h2 class="ds-subtitle">PIECE CULASSE JT MOTEUR TURBO</h2>
+<div class="table-wrap"><table class="ds-table"><thead><tr><th>Fournisseur</th><th>Délais</th><th>Heure limite</th><th>Infos</th></tr></thead><tbody><tr><td>BG DIFFUSION (254)</td><td></td><td></td><td>RAMASSE CHASSIEU</td></tr><tr><td><a class="supplier-link" href="https://onlineshop.ms-motorservice.com/msi/MSICD?page=createlogin&amp;lang=D&amp;vko=0003" rel="noopener" target="_blank">MS MOTORS CODE (116)</a></td><td>24H</td><td></td><td>GTI</td></tr><tr><td><a class="supplier-link" href="https://turboshop.th-group.eu/fr/" rel="noopener" target="_blank">TURBO HOET</a></td><td></td><td></td><td></td></tr><tr><td><a class="supplier-link" href="https://www.portailgamotech.com/" rel="noopener" target="_blank">GAMOTECH</a></td><td></td><td></td><td>RECHERCHE TURBO VIA REF ORIGINE A CDER SUR LE HUB</td></tr></tbody></table></div>
+</section>
+<section class="ds-section" data-title="ECHAPPEMENT">
+<h2 class="ds-subtitle">ECHAPPEMENT</h2>
+<div class="table-wrap"><table class="ds-table"><thead><tr><th>Fournisseur</th><th>Délais</th><th>Heure limite</th><th>Infos</th></tr></thead><tbody><tr><td><a class="supplier-link" href="https://info.bosaldistribution.fr/SignIn.aspx" rel="noopener" target="_blank">BOSAL 382</a></td><td></td><td></td><td>GTI</td></tr></tbody></table></div>
+</section>
+<section class="ds-section" data-title="PIECE VOITURE SANS PERMIS">
+<h2 class="ds-subtitle">PIECE VOITURE SANS PERMIS</h2>
+<div class="table-wrap"><table class="ds-table"><thead><tr><th>Fournisseur</th><th>Délais</th><th>Heure limite</th><th>Infos</th></tr></thead><tbody><tr><td>ST FON PLAISANCE (1598)</td><td>48H</td><td></td><td>RAMASSE MAG 18</td></tr></tbody></table></div>
+</section>
+<section class="ds-section" data-title="PNEUMATIQUE">
+<h2 class="ds-subtitle">PNEUMATIQUE</h2>
+<div class="table-wrap"><table class="ds-table"><thead><tr><th>Fournisseur</th><th>Délais</th><th>Heure limite</th><th>Infos</th></tr></thead><tbody><tr><td><a class="supplier-link" href="https://mlt-server.de/shop/login.php" rel="noopener" target="_blank">IHLE PNEU</a></td><td></td><td></td><td></td></tr><tr><td><a class="supplier-link" href="https://www.dipro-online.com/connexion.html" rel="noopener" target="_blank">DIPRO (476)</a></td><td>24H/72H</td><td></td><td>LIVRAISON GEODIS SANS FRAIS DE PORT</td></tr><tr><td>DIPROCASH</td><td></td><td></td><td></td></tr></tbody></table></div>
+</section>
+<section class="ds-section" data-title="POIDS LOURD">
+<h2 class="ds-subtitle">POIDS LOURD</h2>
+<div class="table-wrap"><table class="ds-table"><thead><tr><th>Fournisseur</th><th>Délais</th><th>Heure limite</th><th>Infos</th></tr></thead><tbody><tr><td><a class="supplier-link" href="https://www.synchro-diffusion.com/fr/" rel="noopener" target="_blank">SYNCRO DIFFUSION</a></td><td></td><td></td><td>ACCESSOIRE PL ET CAMPING CAR</td></tr><tr><td><a class="supplier-link" href="https://www.toddchrono.com/" rel="noopener" target="_blank">TODDCHRONO</a></td><td></td><td></td><td></td></tr><tr><td><a class="supplier-link" href="https://www.dieseltechnic.com/fr/" rel="noopener" target="_blank">DIESEL TECHNIC (1314)</a></td><td></td><td></td><td></td></tr><tr><td><a class="supplier-link" href="https://www.lyra-aci.com/index.php?controller=authentication" rel="noopener" target="_blank">LYRA ACI (1701)</a></td><td></td><td></td><td>ECLAIRAGE / FAISCEAU / ACCESSOIRE / CHASSIS CABINE</td></tr></tbody></table></div>
+</section>
+<section class="ds-section" data-title="OUTILLAGE">
+<h2 class="ds-subtitle">OUTILLAGE</h2>
+<div class="table-wrap"><table class="ds-table"><thead><tr><th>Fournisseur</th><th>Délais</th><th>Heure limite</th><th>Infos</th></tr></thead><tbody><tr><td><a class="supplier-link" href="https://www.clas.com/" rel="noopener" target="_blank">CLAS (6146)</a></td><td>24H</td><td></td><td>RAMASSE LA MOTTE</td></tr><tr><td><a class="supplier-link" href="https://www.kstools.fr/" rel="noopener" target="_blank">KS TOOLS (1281)</a></td><td>24H</td><td></td><td></td></tr></tbody></table></div>
+</section>
+<section class="ds-section" data-title="RADIATEUR ECHANGEUR">
+<h2 class="ds-subtitle">RADIATEUR ECHANGEUR</h2>
+<div class="table-wrap"><table class="ds-table"><thead><tr><th>Fournisseur</th><th>Délais</th><th>Heure limite</th><th>Infos</th></tr></thead><tbody><tr><td><a class="supplier-link" href="https://www.nrf.eu/fr/" rel="noopener" target="_blank">NRF (1611)</a></td><td>24/48H</td><td></td><td>LIVRAISON FRAIS DE PORT ENTRE 15 ET 20 EUROS</td></tr><tr><td><a class="supplier-link" href="https://vegapro.inoshop.net/login" rel="noopener" target="_blank">VERTAT (578)</a></td><td>24H</td><td>11H</td><td>RAMASSE GTI OU CIBLEX</td></tr></tbody></table></div>
+</section>
+<section class="ds-section" data-title="TRIADE">
+<h2 class="ds-subtitle">TRIADE</h2>
+<div class="table-wrap"><table class="ds-table"><thead><tr><th>Fournisseur</th><th>Délais</th><th>Heure limite</th><th>Infos</th></tr></thead><tbody><tr><td><a class="supplier-link" href="https://cdal.inoshop.net/connect_v2/index.php?ndd=-3--4--1--12-.-9--14--15--18--8-o-16-.n-5--19-" rel="noopener" target="_blank">CDAL (3822)</a></td><td></td><td>10h45</td><td>LIVRAISON A 14H SUR SITE</td></tr><tr><td><a class="supplier-link" href="https://b2b.dasirweb.fr/login" rel="noopener" target="_blank">DASIR (814)</a></td><td></td><td>11h</td><td>LIVRAISON A 14H SUR SITE</td></tr><tr><td><a class="supplier-link" href="https://www.hubidl.com/" rel="noopener" target="_blank">PAP SUR RIAL (262)</a></td><td></td><td>10h45</td><td>LIVRAISON A 14H SUR SITE</td></tr></tbody></table></div>
+</section>
+<section class="ds-section" data-title="DIVERS">
+<h2 class="ds-subtitle">DIVERS</h2>
+<div class="table-wrap"><table class="ds-table"><thead><tr><th>Fournisseur</th><th>Délais</th><th>Heure limite</th><th>Infos</th></tr></thead><tbody><tr><td><a class="supplier-link" href="https://www.eurogeste.com/" rel="noopener" target="_blank">EUROGESTE (1024)</a></td><td></td><td></td><td>REF TUYAUX CUIVRE FREINS</td></tr></tbody></table></div>
+</section>
+<section class="ds-anchor" id="liste-depot">
+<h1 class="ds-title">LISTE DEPOT</h1>
+<div class="depot-wrap"><div class="depot-group"><div class="depot-label">CDAL :</div><table class="depot-table"><tbody><tr><td class="depot-name">DELPHI</td><td class="depot-code">860</td></tr><tr><td class="depot-name">SEIM</td><td class="depot-code">214</td></tr><tr><td class="depot-name">SASIC</td><td class="depot-code">154</td></tr></tbody></table></div><div class="depot-group"><div class="depot-label">PAP SUD RIAL :</div><table class="depot-table"><tbody><tr><td class="depot-name">CORTECO</td><td class="depot-code">649</td></tr><tr><td class="depot-name">CEVAM</td><td class="depot-code">1399</td></tr><tr><td class="depot-name">FRIGAIR</td><td class="depot-code">1154</td></tr><tr><td class="depot-name">NPS</td><td class="depot-code">906</td></tr><tr><td class="depot-name">MECAFILTER</td><td class="depot-code">878</td></tr></tbody></table></div></div></section>
+<section class="ds-anchor" id="code-back2car">
+<h1 class="ds-title">CODE BACK 2 CAR</h1>
+<div class="table-wrap"><table class="ds-table"><thead><tr><th>Site / Agence</th><th>Code</th></tr></thead><tbody><tr><td>A1 - GENEVE OCCASION (BOITE ET MOTEUR OCCASION)</td><td>1688</td></tr><tr><td>B1 - ST QUANTIN</td><td>6072</td></tr><tr><td>B2 - LAON</td><td>6072</td></tr><tr><td>C1 - LIMAY</td><td>534</td></tr><tr><td>D1 - AXIOMAUTO</td><td>1825</td></tr><tr><td>EI - DUPAS</td><td>6190</td></tr><tr><td>FA - FERRON VERINS</td><td>1101</td></tr></tbody></table></div>
+</section>
+<section class="ds-anchor" id="code-hub">
+<h1 class="ds-title">CODE FOURNISSEUR HUB</h1>
+<section class="ds-section" data-title="CODE FOURNISSEUR HUB">
+<div class="table-wrap">
+<table class="ds-table hub-table">
+<tbody>
+<tr><td>1255 Blois (frais de port)</td></tr>
+<tr><td>1191 Le Hello</td></tr>
+<tr><td>1402 SGDB precisium (frais de port)</td></tr>
+<tr><td>1589 st amand preference carrosserie</td></tr>
+<tr><td>1220 Aprevia (frais de port)</td></tr>
+<tr><td>863 L e Rhu</td></tr>
+<tr><td>1776 PLATEFORME FIRST</td></tr>
+<tr><td>1600 PLATEFORME PREF SHELL NAP</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+</div>
+</div>
+</div>
+</section>
+</main>
+<script>window.__SITE_PREFIX__="../";</script>
+<script src="../assets/auth.js"></script>
+<script>requireAuth();</script>
+<script src="../assets/app.js"></script>
+</body>
+</html>
