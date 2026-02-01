@@ -98,7 +98,8 @@
 
   <script>
     (function(){
-      const wanted = "/commerce/commerce";
+      const wanted = "/commerce/commerce.html";
+      if (location.pathname !== wanted) location.replace(wanted);
       if (location.pathname !== wanted) {
         location.replace(wanted + location.search + location.hash);
       }

@@ -1,0 +1,6 @@
+sudo tee /var/www/documentsdurand/commerce/links.json > /dev/null <<'JSON'
+{
+  "televente_bosch": "/batterie-bosch.html",
+  "televente_lubrifiant": "/castrol"
+}
+JSON
