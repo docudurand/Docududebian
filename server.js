@@ -17,6 +17,7 @@ import PDFDocument from "pdfkit";
 import { PDFDocument as PDFLib, StandardFonts, rgb } from "pdf-lib";
 import ftp from "basic-ftp";
 import ExcelJS from "exceljs";
+import QRCode from "qrcode";
 import mailLogsRouter from "./routes/mail-logs.js";
 
 import * as stats from "./stats.js";
@@ -434,27 +435,82 @@ app.get("/commerce/links.json", (req, res) => {
 
 app.get("/atelier/api/config", async (req, res) => {
   let client;
+  const debug = String(req.query.debug || "") === "1";
+
+  // Dossier racine FTP (utilisé ailleurs dans ce server)
+  const ftpRootBase = (process.env.FTP_BACKUP_FOLDER || "/").replace(/\/$/, "");
+  const remotePathEnv = String(process.env.ATELIER_DATA_PATH || "").trim();
+
+  // Chemin par défaut : /Disque 1/service/atelier_data.json (si FTP_BACKUP_FOLDER=/Disque 1/service)
+  const remotePath = remotePathEnv || `${ftpRootBase}/atelier_data.json`;
+
   try {
     client = await ftpClient();
 
-    // ✅ Chemin du fichier sur ton FTP (d’après ta capture: /service/atelier_data.json)
-    // Adapte si ton code utilise déjà une constante de dossier FTP.
-    const data = (await dlJSON(client, "/service/atelier_data.json")) || {};
+    // Essaye le chemin tel quel, puis (si besoin) sans le "/" initial (certains FTP refusent les chemins absolus)
+    let data = await dlJSON(client, remotePath);
+    if (!data && remotePath.startsWith("/")) {
+      data = await dlJSON(client, remotePath.replace(/^\/+/, ""));
+    }
+    if (!data || typeof data !== "object") {
+      return res.status(500).json({
+        ok: false,
+        error: "atelier_config_not_found",
+        details: debug ? { remotePathTried: remotePath } : undefined,
+      });
+    }
 
-    return res.json({
-      ok: true,
-      lignes: data.lignes || data.LIGNES || [],
-      regles: data.regles || data.REGLES || []
-    });
+    const lignes = data.lignes || data.LIGNES || [];
+    const regles = data.regles || data.REGLES || [];
+
+    const lignesOk = Array.isArray(lignes) && lignes.length > 0;
+    const reglesOk = Array.isArray(regles) && regles.length > 0;
+
+    // Si tout est vide, c'est presque toujours un problème de chemin/FTP/JSON → on préfère une erreur explicite
+    if (!lignesOk && !reglesOk) {
+      return res.status(500).json({
+        ok: false,
+        error: "atelier_config_empty",
+        details: debug
+          ? { remotePathTried: remotePath, keys: Object.keys(data || {}) }
+          : undefined,
+      });
+    }
+
+    return res.json({ ok: true, lignes: Array.isArray(lignes) ? lignes : [], regles: Array.isArray(regles) ? regles : [] });
   } catch (e) {
     console.error("[atelier/api/config]", e?.message || e);
-    return res.status(500).json({ ok: false, error: "config_load_failed" });
+    return res.status(500).json({
+      ok: false,
+      error: "config_load_failed",
+      details: debug ? String(e?.message || e) : undefined,
+    });
   } finally {
     try { client?.close(); } catch {}
   }
 });
 
-// Fonction retry avec backoff exponentiel pour robustesse réseau
+/
+// QR code pour les dossiers Atelier (utilisé dans les PDF)
+app.get("/atelier/qr/:no", async (req, res) => {
+  try {
+    const no = String(req.params.no || "").trim();
+    if (!no) return res.status(400).send("missing_no");
+
+    const base = String(process.env.PUBLIC_BASE_URL || "").trim() || `${req.protocol}://${req.get("host")}`;
+    const validationUrl = `${base.replace(/\/+$/, "")}/atelier/validation.html?no=${encodeURIComponent(no)}`;
+
+    const png = await QRCode.toBuffer(validationUrl, { type: "png", scale: 6, margin: 1 });
+
+    res.setHeader("Content-Type", "image/png");
+    res.setHeader("Cache-Control", "no-store");
+    return res.status(200).send(png);
+  } catch (e) {
+    console.error("[atelier/qr]", e?.message || e);
+    return res.status(500).send("qr_error");
+  }
+});
+/ Fonction retry avec backoff exponentiel pour robustesse réseau
 async function retryWithBackoff(fn, options = {}) {
   const {
     maxRetries = 3,
