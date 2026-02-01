@@ -1,10 +1,8 @@
+// Config Atelier (Debian)
 window.__ATELIER_CFG = {
-  // URL de ton Apps Script (celle qui renvoie lignes/regles)
-  GS_URL: "https://script.google.com/macros/s/TON_ID/exec",
+  // Base API servie par ton Node (nginx proxy vers :3000)
+  API_BASE: "/atelier/api",
 
-  // (optionnel) mots de passe suivi si tu veux les gérer ici aussi
-  ATELIER_SUIVI_PASS_STE: "",
-  ATELIER_SUIVI_PASS_BG: "",
-  ATELIER_SUIVI_PASS_LIMITED: "",
-  ATELIER_SUIVI_PASS_CHASSE: ""
+  // Fichier JSON sur ton FTP Freebox
+  FTP_FILE: "atelier_data.json"
 };
