@@ -185,9 +185,9 @@ router.post('/loans/print', async (req, res) => {
     const closeUrl  = `${origin}/pret/close.html?loan_id=${encodeURIComponent(d.loan_id || '')}&immat=${encodeURIComponent(d.immatriculation || '')}`;
     const qrDataUrl = await QRCode.toDataURL(closeUrl, { margin: 1, width: 110 });
 
-    const LOGO_URL   = 'https://raw.githubusercontent.com/docudurand/mes-formulaires/main/logodurand.png';
-    const CAR_URL    = 'https://raw.githubusercontent.com/docudurand/mes-formulaires/main/voiture.png';
-    const GAUGE_URL  = 'https://raw.githubusercontent.com/docudurand/mes-formulaires/main/jauge.png';
+    const LOGO_URL   = 'https://i.postimg.cc/CxLtQ1xJ/logodurand.png';
+    const CAR_URL    = 'https://i.postimg.cc/bwNMBJw6/voiture.png';
+    const GAUGE_URL  = 'https://i.postimg.cc/MpK4FTpY/jauge.png';
 
     const esc = s => String(s||'').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 

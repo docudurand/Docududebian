@@ -242,7 +242,7 @@ router.post("/api/print-html", (req, res) => {
   <!-- Header avec logo Durand -->
   <div class="header">
     <div class="logo-section">
-      <img src="https://raw.githubusercontent.com/docudurand/mes-formulaires/main/logodurand.png" alt="Logo Durand" class="logo-img" />
+      <img src="https://i.postimg.cc/CxLtQ1xJ/logodurand.png" alt="Logo Durand" class="logo-img" />
       <div class="logo-text">pièces automobile et services</div>
     </div>
     <div class="title-section">
