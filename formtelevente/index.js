@@ -64,6 +64,14 @@ const COUNTERS_REMOTE_FILE = `${COUNTERS_REMOTE_DIR}/pdf_counters.json`;
 // si FTP pas configure, on reste en local
 const FTP_ENABLED = Boolean(process.env.FTP_HOST && process.env.FTP_USER && process.env.FTP_PASSWORD);
 
+// --- Stockage commandes televente ---
+const ORDERS_LOCAL_DIR = path.join(os.tmpdir(), 'televente_orders');
+const ORDERS_LOCAL_INDEX = path.join(ORDERS_LOCAL_DIR, 'orders_index.json');
+
+const ORDERS_REMOTE_DIR = (process.env.TELEVENTE_ORDERS_DIR || `${FTP_ROOT_BASE}/televente/orders`).replace(/\/$/, '');
+const ORDERS_REMOTE_INDEX = `${ORDERS_REMOTE_DIR}/orders_index.json`;
+const ORDERS_REMOTE_PDF_DIR = `${ORDERS_REMOTE_DIR}/pdfs`;
+
 // Lecture du compteur local
 function readLocalCountersSafe() {
   try {
@@ -104,6 +112,249 @@ async function withFtpClient(fn) {
   } finally {
     client.close();
   }
+}
+
+function ensureLocalOrdersDir() {
+  try { fs.mkdirSync(ORDERS_LOCAL_DIR, { recursive: true }); } catch {}
+}
+
+function readLocalOrdersIndexSafe() {
+  try {
+    ensureLocalOrdersDir();
+    if (!fs.existsSync(ORDERS_LOCAL_INDEX)) return [];
+    const raw = fs.readFileSync(ORDERS_LOCAL_INDEX, 'utf-8');
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeLocalOrdersIndexSafe(list) {
+  try {
+    ensureLocalOrdersDir();
+    fs.writeFileSync(ORDERS_LOCAL_INDEX, JSON.stringify(list, null, 2), 'utf-8');
+  } catch (e) {
+    console.warn('[televente] cannot persist local orders index:', e?.message || e);
+  }
+}
+
+function readLocalOrderSafe(orderId) {
+  try {
+    ensureLocalOrdersDir();
+    const p = path.join(ORDERS_LOCAL_DIR, `${orderId}.json`);
+    if (!fs.existsSync(p)) return null;
+    const raw = fs.readFileSync(p, 'utf-8');
+    const obj = JSON.parse(raw);
+    return obj && typeof obj === 'object' ? obj : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeLocalOrderSafe(orderId, order) {
+  try {
+    ensureLocalOrdersDir();
+    const p = path.join(ORDERS_LOCAL_DIR, `${orderId}.json`);
+    fs.writeFileSync(p, JSON.stringify(order, null, 2), 'utf-8');
+  } catch (e) {
+    console.warn('[televente] cannot persist local order:', e?.message || e);
+  }
+}
+
+function toPosixPath(p) {
+  return String(p || '').replace(/\\/g, '/');
+}
+
+async function ensureDirSafe(client, remoteDir) {
+  try {
+    const wanted = toPosixPath(remoteDir);
+    await client.ensureDir(wanted);
+    return wanted;
+  } catch (e) {
+    const d = toPosixPath(remoteDir);
+    if (d.startsWith('/')) {
+      const alt = d.replace(/^\/+/, '');
+      await client.ensureDir(alt);
+      return alt;
+    }
+    throw e;
+  }
+}
+
+async function downloadToSafe(client, localPath, remotePath) {
+  const rp = toPosixPath(remotePath);
+  try {
+    await client.downloadTo(localPath, rp);
+  } catch (e) {
+    if (rp.startsWith('/')) {
+      await client.downloadTo(localPath, rp.replace(/^\/+/, ''));
+    } else {
+      throw e;
+    }
+  }
+}
+
+async function uploadFromSafe(client, localPath, remotePath) {
+  const rp = toPosixPath(remotePath);
+  try {
+    await client.uploadFrom(localPath, rp);
+  } catch (e) {
+    if (rp.startsWith('/')) {
+      await client.uploadFrom(localPath, rp.replace(/^\/+/, ''));
+    } else {
+      throw e;
+    }
+  }
+}
+
+async function readRemoteJsonSafe(remotePath, fallback) {
+  const tmp = path.join(os.tmpdir(), `televente_json_${crypto.randomUUID()}.json`);
+  try {
+    return await withFtpClient(async (client) => {
+      try {
+        await downloadToSafe(client, tmp, remotePath);
+      } catch {
+        return fallback;
+      }
+      try {
+        const raw = fs.readFileSync(tmp, 'utf-8');
+        const obj = JSON.parse(raw);
+        return (obj && typeof obj === 'object') ? obj : fallback;
+      } catch {
+        return fallback;
+      }
+    });
+  } finally {
+    try { fs.unlinkSync(tmp); } catch {}
+  }
+}
+
+async function writeRemoteJsonSafe(remotePath, data) {
+  const tmp = path.join(os.tmpdir(), `televente_json_${crypto.randomUUID()}.json`);
+  try {
+    fs.writeFileSync(tmp, JSON.stringify(data, null, 2), 'utf-8');
+    await withFtpClient(async (client) => {
+      const dir = path.posix.dirname(toPosixPath(remotePath));
+      await ensureDirSafe(client, dir);
+      await uploadFromSafe(client, tmp, remotePath);
+    });
+  } catch (e) {
+    console.warn('[televente] cannot persist remote json:', e?.message || e);
+  } finally {
+    try { fs.unlinkSync(tmp); } catch {}
+  }
+}
+
+function inferOriginKey(formOriginRaw) {
+  const s = String(formOriginRaw || '').toLowerCase();
+  if (s.includes('bosch')) return 'bosch';
+  if (s.includes('lub')) return 'lub';
+  return 'unknown';
+}
+
+function normalizeLine(raw) {
+  const qty = Number(raw?.qty);
+  const pu = Number(raw?.pu);
+  const monthsRaw = raw?.months && typeof raw.months === 'object' ? raw.months : null;
+  const months = monthsRaw ? {
+    janv: Number(monthsRaw.janv) || 0,
+    fev: Number(monthsRaw.fev) || 0,
+    mars: Number(monthsRaw.mars) || 0,
+    avril: Number(monthsRaw.avril) || 0,
+  } : null;
+  return {
+    tab: String(raw?.tab || ''),
+    ref: String(raw?.ref || ''),
+    produit: String(raw?.produit || ''),
+    pu: Number.isFinite(pu) ? pu : 0,
+    qty: Number.isFinite(qty) ? qty : 0,
+    months,
+    contenance: String(raw?.contenance || ''),
+    isLitres: Boolean(raw?.isLitres),
+    tabLabel: String(raw?.tabLabel || ''),
+    special: String(raw?.special || ''),
+  };
+}
+
+function normalizeComments(raw) {
+  const byTab = raw && typeof raw.byTab === 'object' ? raw.byTab : {};
+  const cleanByTab = {};
+  Object.keys(byTab || {}).forEach((k) => {
+    cleanByTab[String(k)] = String(byTab[k] || '');
+  });
+  return {
+    global: String(raw?.global || ''),
+    byTab: cleanByTab,
+  };
+}
+
+function computeTotal(lines) {
+  return (lines || []).reduce((sum, l) => sum + (Number(l.qty) || 0) * (Number(l.pu) || 0), 0);
+}
+
+function summarizeOrder(order) {
+  return {
+    id: order.id,
+    originKey: order.originKey,
+    origin: order.origin,
+    client: order.client,
+    salesperson: order.salesperson,
+    total: order.total,
+    currency: order.currency || 'EUR',
+    createdAt: order.createdAt,
+    updatedAt: order.updatedAt || order.createdAt,
+    pdfPath: order.pdfPath || '',
+  };
+}
+
+async function readOrdersIndex() {
+  if (FTP_ENABLED) {
+    const data = await readRemoteJsonSafe(ORDERS_REMOTE_INDEX, []);
+    return Array.isArray(data) ? data : [];
+  }
+  return readLocalOrdersIndexSafe();
+}
+
+async function writeOrdersIndex(list) {
+  if (FTP_ENABLED) return writeRemoteJsonSafe(ORDERS_REMOTE_INDEX, list);
+  writeLocalOrdersIndexSafe(list);
+}
+
+async function readOrderById(orderId) {
+  if (FTP_ENABLED) {
+    const remotePath = `${ORDERS_REMOTE_DIR}/${orderId}.json`;
+    const data = await readRemoteJsonSafe(remotePath, null);
+    return data && typeof data === 'object' ? data : null;
+  }
+  return readLocalOrderSafe(orderId);
+}
+
+async function writeOrder(order, pdfBuffer) {
+  if (FTP_ENABLED) {
+    const jsonPath = `${ORDERS_REMOTE_DIR}/${order.id}.json`;
+    const pdfPath = `${ORDERS_REMOTE_PDF_DIR}/${order.id}.pdf`;
+
+    if (pdfBuffer && Buffer.isBuffer(pdfBuffer)) {
+      const tmp = path.join(os.tmpdir(), `televente_${order.id}.pdf`);
+      try {
+        fs.writeFileSync(tmp, pdfBuffer);
+        await withFtpClient(async (client) => {
+          await ensureDirSafe(client, ORDERS_REMOTE_PDF_DIR);
+          await uploadFromSafe(client, tmp, pdfPath);
+        });
+        order.pdfPath = pdfPath;
+      } finally {
+        try { fs.unlinkSync(tmp); } catch {}
+      }
+    }
+
+    await writeRemoteJsonSafe(jsonPath, order);
+
+    return;
+  }
+
+  writeLocalOrderSafe(order.id, order);
 }
 
 // Lecture du compteur distant via FTP
@@ -166,6 +417,10 @@ function nextCounter(baseKey) {
   });
 
   return _counterLock;
+}
+
+function makeOrderId() {
+  return `tv_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
 }
 
 // Envoi du PDF par email (televente)
@@ -233,10 +488,118 @@ router.post('/send-order', async (req, res) => {
 
   try {
     await transporter.sendMail(mailOptions);
-    return res.json({ success: true });
+
+    const orderInput = req.body?.order || null;
+    let orderId = '';
+
+    if (orderInput && typeof orderInput === 'object') {
+      orderId = makeOrderId();
+      const rawLines = Array.isArray(orderInput.lines) ? orderInput.lines : [];
+      const lines = rawLines.map(normalizeLine).filter(l => l.qty > 0 || l.ref || l.produit);
+      const comments = normalizeComments(orderInput.comments || {});
+      const total = Number.isFinite(Number(orderInput.total))
+        ? Number(orderInput.total)
+        : computeTotal(lines);
+
+      const order = {
+        id: orderId,
+        origin: String(orderInput.origin || form_origin || ''),
+        originKey: inferOriginKey(orderInput.origin || form_origin || ''),
+        client: String(orderInput.client || client || ''),
+        salesperson: String(orderInput.salesperson || salesperson || ''),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        currency: String(orderInput.currency || 'EUR'),
+        total,
+        comments,
+        lines,
+      };
+
+      try {
+        await writeOrder(order, Buffer.from(pdf, 'base64'));
+        const index = await readOrdersIndex();
+        const nextIndex = [summarizeOrder(order), ...index.filter(x => x && x.id !== order.id)];
+        await writeOrdersIndex(nextIndex.slice(0, 2000));
+      } catch (e) {
+        console.warn('[televente] order save failed:', e?.message || e);
+      }
+    }
+
+    return res.json({ success: true, orderId });
   } catch (error) {
     console.error('[televente] Email send failed:', error);
     return res.status(500).json({ success: false, error: 'email_failed' });
+  }
+});
+
+// Liste des commandes televente (resume)
+router.get('/orders', async (req, res) => {
+  try {
+    const origin = String(req.query.origin || '').trim().toLowerCase();
+    let list = await readOrdersIndex();
+    if (origin) {
+      list = list.filter(o => {
+        const key = String(o?.originKey || '').toLowerCase();
+        const raw = String(o?.origin || '').toLowerCase();
+        return key === origin || raw.includes(origin);
+      });
+    }
+    list.sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+    res.json(list);
+  } catch (e) {
+    res.status(500).json({ success: false, error: String(e?.message || e) });
+  }
+});
+
+// Detail d'une commande televente
+router.get('/orders/:id', async (req, res) => {
+  try {
+    const id = String(req.params.id || '').trim();
+    if (!id) return res.status(400).json({ success: false, error: 'missing_id' });
+    const order = await readOrderById(id);
+    if (!order) return res.status(404).json({ success: false, error: 'not_found' });
+    res.json(order);
+  } catch (e) {
+    res.status(500).json({ success: false, error: String(e?.message || e) });
+  }
+});
+
+// Mise a jour lignes/commentaires d'une commande
+router.put('/orders/:id', async (req, res) => {
+  try {
+    const id = String(req.params.id || '').trim();
+    if (!id) return res.status(400).json({ success: false, error: 'missing_id' });
+
+    const current = await readOrderById(id);
+    if (!current) return res.status(404).json({ success: false, error: 'not_found' });
+
+    const rawLines = Array.isArray(req.body?.lines) ? req.body.lines : null;
+    const nextLines = rawLines ? rawLines.map(normalizeLine).filter(l => l.qty > 0 || l.ref || l.produit) : current.lines || [];
+
+    const nextComments = req.body?.comments
+      ? normalizeComments(req.body.comments)
+      : (current.comments || { global: '', byTab: {} });
+
+    const total = Number.isFinite(Number(req.body?.total))
+      ? Number(req.body.total)
+      : computeTotal(nextLines);
+
+    const updated = {
+      ...current,
+      lines: nextLines,
+      comments: nextComments,
+      total,
+      updatedAt: new Date().toISOString(),
+    };
+
+    await writeOrder(updated);
+    const index = await readOrdersIndex();
+    const nextIndex = [summarizeOrder(updated), ...index.filter(x => x && x.id !== updated.id)];
+    await writeOrdersIndex(nextIndex.slice(0, 2000));
+
+    res.json({ success: true, order: updated });
+  } catch (e) {
+    res.status(500).json({ success: false, error: String(e?.message || e) });
   }
 });
 

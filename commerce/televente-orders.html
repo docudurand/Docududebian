@@ -1,0 +1,933 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gestion commandes télévente</title>
+  <style>
+    :root{
+      --bg: #eef1ff;
+      --card: #ffffff;
+      --ink: #0f172a;
+      --muted: #64748b;
+      --brand: #1e3a8a;
+      --accent: #2563eb;
+      --border: #e2e8f0;
+      --shadow: 0 16px 32px rgba(15,23,42,.08);
+      --radius: 16px;
+    }
+    *{ box-sizing: border-box; }
+    body{
+      margin: 0;
+      font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+    }
+    .page{
+      max-width: 980px;
+      margin: 18px auto;
+      padding: 14px;
+    }
+    .top{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+    .title h1{
+      margin: 0;
+      font-size: clamp(20px, 3vw, 30px);
+      letter-spacing: .02em;
+    }
+    .title p{
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .tabs{
+      display: inline-flex;
+      background: #dbe4ff;
+      padding: 6px;
+      border-radius: 999px;
+      gap: 6px;
+    }
+    .tab{
+      border: 0;
+      padding: 8px 18px;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--brand);
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .tab.active{
+      background: var(--brand);
+      color: #fff;
+      box-shadow: var(--shadow);
+    }
+    .layout{
+      display: grid;
+      grid-template-columns: minmax(260px, 360px) 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+    .panel{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+    .list-header{
+      display: grid;
+      gap: 8px;
+    }
+    .list-header input{
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 14px;
+    }
+    .btn{
+      border: 0;
+      background: var(--accent);
+      color: #fff;
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn.secondary{
+      background: #e2e8f0;
+      color: var(--ink);
+      font-weight: 600;
+    }
+    .orders{
+      margin-top: 12px;
+      display: grid;
+      gap: 10px;
+      max-height: 70vh;
+      overflow: auto;
+      padding-right: 4px;
+    }
+    .orderItem{
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      cursor: pointer;
+      display: grid;
+      gap: 6px;
+      background: #f8fafc;
+    }
+    .orderItem.active{
+      border-color: var(--accent);
+      background: #eef2ff;
+    }
+    .orderClient{ font-weight: 700; }
+    .orderMeta{ font-size: 12px; color: var(--muted); }
+    .orderTotal{
+      font-weight: 700;
+      color: var(--brand);
+      justify-self: end;
+    }
+    .empty{
+      padding: 18px;
+      background: #f8fafc;
+      border-radius: 12px;
+      color: var(--muted);
+      border: 1px dashed var(--border);
+    }
+    .metaGrid{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .metaCard{
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+      font-size: 13px;
+    }
+    .metaCard strong{ display: block; font-size: 14px; }
+    table{
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    th, td{
+      border-bottom: 1px solid var(--border);
+      padding: 8px 6px;
+      text-align: left;
+      vertical-align: middle;
+    }
+    th{
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+    td input{
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 8px;
+      font-size: 13px;
+    }
+    td .small{
+      width: 84px;
+    }
+    .rowActions{
+      display: flex;
+      justify-content: flex-end;
+    }
+    .rowActions button{
+      border: 0;
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 6px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+    .commentBlock{
+      margin-top: 14px;
+    }
+    .commentBlock label{
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      color: var(--muted);
+      display: block;
+      margin-bottom: 6px;
+    }
+    textarea{
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+      min-height: 90px;
+      resize: vertical;
+      font-size: 13px;
+      font-family: inherit;
+    }
+    .actions{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 16px;
+    }
+    .totalBox{
+      font-weight: 800;
+      font-size: 16px;
+      color: var(--brand);
+    }
+    #status{
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    @media (max-width: 980px){
+      .layout{ grid-template-columns: 1fr; }
+      .orders{ max-height: none; }
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+  <div class="page">
+    <div class="top">
+      <div class="title">
+        <h1>Gestion commandes télévente</h1>
+        <p>Modifiez les lignes et regénérez un PDF téléchargeable.</p>
+      </div>
+      <div class="tabs">
+        <button class="tab active" data-origin="bosch" type="button">Bosch</button>
+        <button class="tab" data-origin="lub" type="button">Lub</button>
+      </div>
+    </div>
+
+    <div class="layout">
+      <section class="panel">
+        <div class="list-header">
+          <input id="searchInput" type="text" placeholder="Recherche client, commercial, date..." />
+          <button class="btn secondary" id="btnRefresh" type="button">Actualiser</button>
+        </div>
+        <div id="ordersList" class="orders"></div>
+      </section>
+
+      <section class="panel">
+        <div id="orderEmpty" class="empty">Sélectionnez une commande à gauche.</div>
+        <div id="orderEditor" hidden>
+          <div class="metaGrid">
+            <div class="metaCard"><strong>Commande</strong><span id="metaId">—</span></div>
+            <div class="metaCard"><strong>Date</strong><span id="metaDate">—</span></div>
+            <div class="metaCard"><strong>Client</strong><span id="metaClient">—</span></div>
+            <div class="metaCard"><strong>Commercial</strong><span id="metaSales">—</span></div>
+          </div>
+
+          <div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;">
+              <strong>Lignes produits</strong>
+              <button class="btn secondary" id="btnAddLine" type="button">Ajouter une ligne</button>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Onglet</th>
+                  <th>Réf</th>
+                  <th>Produit</th>
+                  <th>PU</th>
+                  <th>Qté</th>
+                  <th>Total</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="linesBody"></tbody>
+            </table>
+          </div>
+
+          <div class="commentBlock">
+            <label for="commentGlobal">Commentaire global</label>
+            <textarea id="commentGlobal"></textarea>
+          </div>
+
+          <div id="tabComments"></div>
+
+          <div class="actions">
+            <div class="totalBox">Total: <span id="orderTotal">0,00 €</span></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button class="btn secondary" id="btnSave" type="button">Enregistrer</button>
+              <button class="btn" id="btnPdf" type="button">Télécharger PDF</button>
+            </div>
+          </div>
+          <div id="status"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = '/formtelevente';
+    let currentOrigin = 'bosch';
+    let ordersCache = [];
+    let currentOrder = null;
+
+    const BOSCH_TAB_LIST = [
+      { id:'batteriekadeos',  name:'Batterie Bosch Kadeos' },
+      { id:'batterietv',      name:'Batterie Bosch TV' },
+      { id:'gigawattkadeos',  name:'Gigawatt Kadeos' },
+      { id:'gigawatttv',      name:'Gigawatt TV' },
+      { id:'balai',           name:'Balai' },
+      { id:'freinage',        name:'Freinage' },
+      { id:'ampoule',         name:'Ampoule' },
+      { id:'bougieall',       name:'Bougie Allumage' },
+      { id:'bougiepre',       name:'Bougie Préchauffage' },
+      { id:'filtre-huile',    name:'Filtre Huile' },
+      { id:'filtre-air',      name:'Filtre Air' },
+      { id:'filtre-gazoil',   name:'Filtre Gazoil' },
+      { id:'filtre-pollen',   name:'Filtre Pollen' },
+      { id:'quantitatifs',    name:'QUANTITATIFS FILTRATION' },
+      { id:'Kit-Distribution',name:'Kit Distribution' },
+      { id:'liquide',         name:'Liquide de freins' },
+    ];
+    const BOSCH_BATTERY_TABS = new Set(['batteriekadeos','batterietv','gigawattkadeos','gigawatttv']);
+    const BOSCH_MONTHS = ['janv','fev','mars','avril'];
+
+    const LUB_SUBS_BY_BRAND = {
+      YACCO: [
+        { id:'fut-208l',     label:'FÛT 208L' },
+        { id:'tonnelet-60l', label:'TONNELET 60L' },
+        { id:'20l-boite',    label:'20L HUILE BOITE' },
+        { id:'1l-2l-5l',     label:'1L -2L -5L', isLitres:true }
+      ],
+      MANNOL: [
+        { id:'fut-208l',     label:'FÛT 208L' },
+        { id:'tonnelet-60l', label:'TONNELET 60L' },
+        { id:'5l',           label:'5L', isLitres:true }
+      ],
+      CASTROL: [
+        { id:'fut-208l',     label:'FÛT 208L' },
+        { id:'tonnelet-60l', label:'TONNELET 60L' },
+        { id:'20l',          label:'20L' },
+        { id:'1l-2l-5l',     label:'1L -2L -5L', isLitres:true }
+      ],
+      SHELL: [
+        { id:'fut-208l',     label:'FÛT 208L' },
+        { id:'20l',          label:'20L' }
+      ]
+    };
+    const LUB_BRANDS = Object.keys(LUB_SUBS_BY_BRAND);
+    const lubTabId = (brand, subId) => `${brand.toLowerCase()}-${subId}`;
+
+    const ordersList = document.getElementById('ordersList');
+    const orderEmpty = document.getElementById('orderEmpty');
+    const orderEditor = document.getElementById('orderEditor');
+    const linesBody = document.getElementById('linesBody');
+    const statusEl = document.getElementById('status');
+
+    function fmtDate(iso){
+      try{
+        const d = new Date(iso);
+        if (!Number.isFinite(d.getTime())) return iso || '';
+        return d.toLocaleString('fr-FR', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' }).replace(',', '');
+      }catch{ return iso || ''; }
+    }
+
+    function formatMoney(v){
+      const n = Number(v) || 0;
+      return n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+    }
+
+    function parseNumber(v){
+      const s = String(v || '').replace(/\u00A0/g,' ').replace(',', '.').replace(/[^\d.\-]/g, '');
+      const n = Number(s);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function setStatus(msg){
+      statusEl.textContent = msg || '';
+    }
+
+    async function fetchOrders(){
+      setStatus('Chargement des commandes...');
+      const res = await fetch(`${API_BASE}/orders?origin=${encodeURIComponent(currentOrigin)}`);
+      const data = await res.json();
+      ordersCache = Array.isArray(data) ? data : [];
+      renderOrders();
+      setStatus('');
+    }
+
+    function renderOrders(){
+      const q = document.getElementById('searchInput').value.trim().toLowerCase();
+      ordersList.innerHTML = '';
+
+      const list = ordersCache.filter(o => {
+        if (!q) return true;
+        const s = `${o.client || ''} ${o.salesperson || ''} ${o.createdAt || ''}`.toLowerCase();
+        return s.includes(q);
+      });
+
+      if (!list.length){
+        ordersList.innerHTML = '<div class="empty">Aucune commande.</div>';
+        return;
+      }
+
+      list.forEach(o => {
+        const item = document.createElement('div');
+        item.className = 'orderItem' + (currentOrder && currentOrder.id === o.id ? ' active' : '');
+        item.dataset.id = o.id;
+        item.innerHTML = `
+          <div class="orderClient">${o.client || '—'}</div>
+          <div class="orderMeta">${o.salesperson || '—'} • ${fmtDate(o.createdAt)}</div>
+          <div class="orderTotal">${formatMoney(o.total)}</div>
+        `;
+        item.addEventListener('click', () => loadOrder(o.id));
+        ordersList.appendChild(item);
+      });
+    }
+
+    async function loadOrder(id){
+      setStatus('Chargement de la commande...');
+      const res = await fetch(`${API_BASE}/orders/${encodeURIComponent(id)}`);
+      const data = await res.json();
+      if (data && data.id){
+        currentOrder = data;
+        renderEditor();
+        renderOrders();
+        setStatus('');
+      } else {
+        setStatus('Commande introuvable.');
+      }
+    }
+
+    function renderEditor(){
+      if (!currentOrder){
+        orderEditor.hidden = true;
+        orderEmpty.hidden = false;
+        return;
+      }
+      orderEditor.hidden = false;
+      orderEmpty.hidden = true;
+
+      document.getElementById('metaId').textContent = currentOrder.id || '—';
+      document.getElementById('metaDate').textContent = fmtDate(currentOrder.createdAt);
+      document.getElementById('metaClient').textContent = currentOrder.client || '—';
+      document.getElementById('metaSales').textContent = currentOrder.salesperson || '—';
+      document.getElementById('commentGlobal').value = currentOrder.comments?.global || '';
+
+      renderLines(currentOrder.lines || []);
+      renderTabComments();
+      updateTotal();
+    }
+
+    function renderLines(lines){
+      linesBody.innerHTML = '';
+      lines.forEach(line => appendLineRow(line));
+    }
+
+    function appendLineRow(line){
+      const tr = document.createElement('tr');
+      const meta = {
+        months: line.months || null,
+        contenance: line.contenance || '',
+        isLitres: Boolean(line.isLitres),
+        tabLabel: line.tabLabel || '',
+        special: line.special || ''
+      };
+      tr.dataset.meta = JSON.stringify(meta);
+      tr.innerHTML = `
+        <td><input value="${line.tab || ''}"></td>
+        <td><input value="${line.ref || ''}"></td>
+        <td><input value="${line.produit || ''}"></td>
+        <td><input class="small" value="${Number(line.pu || 0).toFixed(2)}"></td>
+        <td><input class="small" value="${Number(line.qty || 0)}"></td>
+        <td class="lineTotal">0,00 €</td>
+        <td class="rowActions"><button type="button">Suppr.</button></td>
+      `;
+      tr.querySelectorAll('input').forEach(inp => inp.addEventListener('input', updateTotal));
+      tr.querySelector('button').addEventListener('click', () => {
+        tr.remove();
+        updateTotal();
+      });
+      linesBody.appendChild(tr);
+    }
+
+    function renderTabComments(){
+      const wrap = document.getElementById('tabComments');
+      wrap.innerHTML = '';
+      const byTab = currentOrder?.comments?.byTab || {};
+      const tabs = new Set([
+        ...Object.keys(byTab || {}),
+        ...(currentOrder.lines || []).map(l => l.tab).filter(Boolean)
+      ]);
+      tabs.forEach(tabId => {
+        const block = document.createElement('div');
+        block.className = 'commentBlock';
+        block.innerHTML = `
+          <label>Commentaire ${tabId}</label>
+          <textarea data-tab="${tabId}">${byTab[tabId] || ''}</textarea>
+        `;
+        wrap.appendChild(block);
+      });
+    }
+
+    function getLinesFromTable(){
+      const lines = [];
+      linesBody.querySelectorAll('tr').forEach(tr => {
+        const inputs = tr.querySelectorAll('input');
+        const tab = inputs[0].value.trim();
+        const ref = inputs[1].value.trim();
+        const produit = inputs[2].value.trim();
+        const pu = parseNumber(inputs[3].value);
+        const qty = parseNumber(inputs[4].value);
+        let meta = {};
+        try { meta = JSON.parse(tr.dataset.meta || '{}'); } catch { meta = {}; }
+        const months = meta.months && typeof meta.months === 'object' ? meta.months : null;
+        if (months) {
+          const sum = Object.values(months).reduce((a,v)=>a+(Number(v)||0),0);
+          if (qty > 0 && sum !== qty) {
+            months.janv = qty;
+            months.fev = 0;
+            months.mars = 0;
+            months.avril = 0;
+          }
+        }
+        if (qty > 0 || ref || produit) {
+          lines.push({
+            tab,
+            ref,
+            produit,
+            pu,
+            qty,
+            months,
+            contenance: meta.contenance || '',
+            isLitres: Boolean(meta.isLitres),
+            tabLabel: meta.tabLabel || tab,
+            special: meta.special || ''
+          });
+        }
+      });
+      return lines;
+    }
+
+    function updateTotal(){
+      const lines = getLinesFromTable();
+      let total = 0;
+      linesBody.querySelectorAll('tr').forEach((tr, idx) => {
+        const line = lines[idx];
+        if (!line) return;
+        const lineTotal = (Number(line.qty) || 0) * (Number(line.pu) || 0);
+        total += lineTotal;
+        tr.querySelector('.lineTotal').textContent = formatMoney(lineTotal);
+      });
+      document.getElementById('orderTotal').textContent = formatMoney(total);
+    }
+
+    function collectComments(){
+      const byTab = {};
+      document.querySelectorAll('#tabComments textarea').forEach(t => {
+        const key = t.dataset.tab || '';
+        if (key) byTab[key] = t.value || '';
+      });
+      return {
+        global: document.getElementById('commentGlobal').value || '',
+        byTab
+      };
+    }
+
+    async function saveOrder(){
+      if (!currentOrder) return;
+      const lines = getLinesFromTable();
+      const total = lines.reduce((sum, l) => sum + (Number(l.qty) || 0) * (Number(l.pu) || 0), 0);
+      const payload = {
+        lines,
+        total,
+        comments: collectComments()
+      };
+      setStatus('Enregistrement...');
+      const res = await fetch(`${API_BASE}/orders/${encodeURIComponent(currentOrder.id)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (data && data.success){
+        currentOrder = data.order || currentOrder;
+        setStatus('Modifications enregistrées.');
+        await fetchOrders();
+      } else {
+        setStatus('Erreur lors de l\'enregistrement.');
+      }
+    }
+
+    function downloadPdf(){
+      if (!currentOrder) return;
+      const edited = {
+        ...currentOrder,
+        lines: getLinesFromTable(),
+        comments: collectComments()
+      };
+      if (currentOrigin === 'bosch') downloadBoschPdf(edited);
+      else downloadLubPdf(edited);
+    }
+
+    async function loadLogo(doc){
+      try{
+        const logoUrl = "https://i.postimg.cc/FsgLstVW/logo.png";
+        const resp = await fetch(logoUrl);
+        const blob = await resp.blob();
+        const base64 = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result.split(',')[1]);
+          reader.readAsDataURL(blob);
+        });
+        doc.addImage(base64, 'PNG', 12, 8, 55, 0);
+      }catch{}
+    }
+
+    function isBoschBattery(tabId){
+      return BOSCH_BATTERY_TABS.has(tabId);
+    }
+
+    function groupByTab(lines){
+      const map = new Map();
+      lines.forEach(line => {
+        const key = line.tab || '';
+        if (!map.has(key)) map.set(key, []);
+        map.get(key).push(line);
+      });
+      return map;
+    }
+
+    function normalizeSpecial(line){
+      const s = (line.special || '').toLowerCase();
+      if (s) return s;
+      const ref = (line.ref || '').toLowerCase();
+      const prod = (line.produit || '').toLowerCase();
+      if (ref.includes('promodurand') || prod.includes('promodurand')) return 'promodurand';
+      if (ref.includes('points') || prod.includes('points bosch extra')) return 'points';
+      if (prod.includes('offerte')) return 'offerte';
+      if (prod.includes('veste')) return 'veste';
+      return '';
+    }
+
+    async function downloadBoschPdf(order){
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit:'mm', format:'a4' });
+      await loadLogo(doc);
+
+      const PAGE_HEIGHT = doc.internal.pageSize.getHeight();
+      const MARGIN_TOP = 15, MARGIN_BOTTOM = 15;
+      let y = MARGIN_TOP + 10;
+
+      doc.setFontSize(16); y += 10;
+      doc.text('Bon de Commande Televente BOSCH 2026', 105, y, { align:'center' }); y += 10;
+      doc.setFontSize(11);
+      doc.text(`Date : ${fmtDate(order.createdAt)}`, 15, y);
+      y += 6; doc.text(`Commercial : ${order.salesperson || '—'}`, 15, y);
+      y += 6; doc.text(`Client : ${order.client || '—'}`, 15, y);
+      y += 12;
+
+      const byTab = groupByTab(order.lines || []);
+      for (const tab of BOSCH_TAB_LIST) {
+        const tabId = tab.id;
+        const lines = byTab.get(tabId) || [];
+        const tabTitle = (lines.find(l => l.tabLabel)?.tabLabel) || tab.name;
+        const comment = order.comments?.byTab?.[tabId] || '';
+
+        const products = lines.filter(l => !normalizeSpecial(l));
+        const specials = lines.filter(l => normalizeSpecial(l));
+
+        if (!products.length && !comment && !specials.length) continue;
+
+        if (y + 12 > PAGE_HEIGHT - MARGIN_BOTTOM) { doc.addPage(); y = MARGIN_TOP; }
+        doc.setFontSize(16); doc.text(tabTitle, 15, y); y += 6;
+
+        if (products.length) {
+          if (isBoschBattery(tabId)) {
+            const monthTotals = { janv: 0, fev: 0, mars: 0, avril: 0 };
+            let grandQty = 0;
+            const head = [['Réf','Produit','PU (€)','Janv','Fev','Mars','Avril','Qté','Total (€)']];
+            const body = products.map(l => {
+              const months = l.months || { janv:0, fev:0, mars:0, avril:0 };
+              monthTotals.janv += Number(months.janv)||0;
+              monthTotals.fev += Number(months.fev)||0;
+              monthTotals.mars += Number(months.mars)||0;
+              monthTotals.avril += Number(months.avril)||0;
+              grandQty += Number(l.qty)||0;
+              const fmt = (v)=> (v>0 ? String(v) : '');
+              return [
+                l.ref || '',
+                l.produit || '',
+                Number(l.pu || 0).toFixed(2),
+                fmt(Number(months.janv)||0),
+                fmt(Number(months.fev)||0),
+                fmt(Number(months.mars)||0),
+                fmt(Number(months.avril)||0),
+                String(Number(l.qty)||0),
+                (Number(l.pu || 0) * Number(l.qty || 0)).toFixed(2)
+              ];
+            });
+            const foot = [[
+              '', 'Totaux (Qté)', '',
+              String(monthTotals.janv),
+              String(monthTotals.fev),
+              String(monthTotals.mars),
+              String(monthTotals.avril),
+              String(grandQty),
+              ''
+            ]];
+            doc.autoTable({
+              head, body, foot,
+              startY: y,
+              styles: { fontSize:10, halign:'center' },
+              headStyles: { fillColor:[79,92,102] },
+              footStyles: { fillColor:[240,240,240], textColor:[0,0,0], fontStyle:'bold' },
+              theme: 'grid',
+              margin: { left:15, right:15 }
+            });
+            y = doc.lastAutoTable.finalY + 2;
+          } else {
+            const head = [['Réf','Produit','PU (€)','Qté','Total (€)']];
+            const body = products.map(l => [
+              l.ref || '',
+              l.produit || '',
+              Number(l.pu || 0).toFixed(2),
+              String(Number(l.qty)||0),
+              (Number(l.pu || 0) * Number(l.qty || 0)).toFixed(2)
+            ]);
+            doc.autoTable({
+              head, body,
+              startY: y,
+              styles: { fontSize:10, halign:'center' },
+              headStyles: { fillColor:[79,92,102] },
+              theme: 'grid',
+              margin: { left:15, right:15 }
+            });
+            y = doc.lastAutoTable.finalY + 2;
+          }
+        }
+
+        specials.forEach(l => {
+          const sp = normalizeSpecial(l);
+          if (y + 8 > PAGE_HEIGHT - MARGIN_BOTTOM) { doc.addPage(); y = MARGIN_TOP; }
+          doc.setFontSize(12);
+          if (sp === 'promodurand') doc.text(`PROMODURAND (KADEOS 120€ OU 240€) : ${l.qty}`, 15, y + 5);
+          else if (sp === 'points') doc.text(`Points Bosch EXTRA : ${l.qty}`, 15, y + 5);
+          else if (sp === 'offerte') doc.text(`BATTERIE S4005 OFFERTE : ${l.qty}`, 15, y + 5);
+          else if (sp === 'veste') doc.text(`${l.produit || 'VESTE'} (${l.ref || ''}) : ${l.qty}`, 15, y + 5);
+          else doc.text(`${l.produit || l.ref} : ${l.qty}`, 15, y + 5);
+          y += 10;
+        });
+
+        const totalTab = products.reduce((a,l)=>a + (Number(l.qty)||0)*(Number(l.pu)||0), 0);
+        const qtyTab = products.reduce((a,l)=>a + (Number(l.qty)||0), 0);
+        if (y + 8 > PAGE_HEIGHT - MARGIN_BOTTOM) { doc.addPage(); y = MARGIN_TOP; }
+        doc.setFontSize(11);
+        doc.text(`Total ${tabTitle} : ${totalTab.toFixed(2)} € | Qté : ${qtyTab}`, 15, y + 5);
+        y += 15;
+
+        if (comment) {
+          const lines = doc.splitTextToSize('Commentaire : ' + comment, 180);
+          const lineHeight = 5, paddingTop = 5, paddingBottom = 2;
+          const boxHeight = lines.length * lineHeight + paddingTop + paddingBottom;
+          if (y + boxHeight > PAGE_HEIGHT - MARGIN_BOTTOM) { doc.addPage(); y = MARGIN_TOP; }
+          doc.rect(13, y - 1, 184, boxHeight);
+          doc.text(lines, 15, y + paddingTop);
+          y += boxHeight + 15;
+        } else {
+          y += 15;
+        }
+      }
+
+      const globalComment = order.comments?.global || '';
+      if (globalComment) {
+        const lines = doc.splitTextToSize('Commentaire global : ' + globalComment, 180);
+        const lineHeight = 5, paddingTop = 5, paddingBottom = 2;
+        const boxHeight = lines.length * lineHeight + paddingTop + paddingBottom;
+        if (y + boxHeight > PAGE_HEIGHT - MARGIN_BOTTOM) { doc.addPage(); y = MARGIN_TOP; }
+        doc.rect(13, y - 1, 184, boxHeight);
+        doc.text(lines, 15, y + paddingTop);
+        y += boxHeight + 10;
+      }
+
+      const globalTotal = (order.lines || []).filter(l => !normalizeSpecial(l))
+        .reduce((a,l)=>a + (Number(l.qty)||0)*(Number(l.pu)||0), 0);
+      if (y + 10 > PAGE_HEIGHT - MARGIN_BOTTOM) { doc.addPage(); y = MARGIN_TOP; }
+      doc.setFontSize(16);
+      doc.text(`Montant total : ${globalTotal.toFixed(2)} €`, 15, y + 6);
+
+      const safeClient = (order.client || 'client').replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '_');
+      doc.save(`commande_televente_bosch_${safeClient || 'client'}.pdf`);
+    }
+
+    async function downloadLubPdf(order){
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit:'mm', format:'a4' });
+      await loadLogo(doc);
+
+      const PAGE_HEIGHT = doc.internal.pageSize.getHeight();
+      const MARGIN_TOP = 15, MARGIN_BOTTOM = 15;
+      let y = MARGIN_TOP + 20;
+
+      doc.setFontSize(16);
+      doc.text('Bon de Commande LUB', 105, y, { align:'center' });
+      y += 10;
+
+      doc.setFontSize(11);
+      doc.text(`Date : ${fmtDate(order.createdAt)}`, 15, y); y += 6;
+      doc.text(`Commercial : ${order.salesperson || '—'}`, 15, y); y += 6;
+      doc.text(`Client : ${order.client || '—'}`, 15, y); y += 10;
+
+      const byTab = groupByTab(order.lines || []);
+      for (const brand of LUB_BRANDS) {
+        const subs = LUB_SUBS_BY_BRAND[brand] || [];
+        for (const sub of subs) {
+          const id = lubTabId(brand, sub.id);
+          const lines = byTab.get(id) || [];
+          const comment = order.comments?.byTab?.[id] || '';
+          if (!lines.length && !comment) continue;
+
+          if (y + 12 > PAGE_HEIGHT - MARGIN_BOTTOM) { doc.addPage(); y = MARGIN_TOP; }
+          doc.setFontSize(16);
+          doc.text(`${brand} — ${sub.label}`, 15, y);
+          y += 6;
+
+          if (lines.length) {
+            const isLitres = !!sub.isLitres;
+            const head = isLitres
+              ? [['Réf','Produit','PU (€)','Qté','Total (€)','Cont. Carton']]
+              : [['Réf','Produit','PU (€)','Qté','Total (€)']];
+
+            const body = lines.map(l => {
+              const tot = (Number(l.pu||0) * Number(l.qty||0)).toFixed(2);
+              if (isLitres) {
+                const cont = l.contenance || '—';
+                return [l.ref || '', l.produit || '', Number(l.pu||0).toFixed(2), String(Number(l.qty)||0), tot, cont];
+              }
+              return [l.ref || '', l.produit || '', Number(l.pu||0).toFixed(2), String(Number(l.qty)||0), tot];
+            });
+
+            doc.autoTable({
+              head, body,
+              startY: y,
+              styles: { fontSize:10, halign:'center' },
+              headStyles: { fillColor:[79,92,102] },
+              theme: 'grid',
+              margin: { left:15, right:15 }
+            });
+
+            y = (doc.lastAutoTable?.finalY || y) + 12;
+          }
+
+          const totalTab = lines.reduce((a,l)=>a + (Number(l.qty)||0)*(Number(l.pu)||0), 0);
+          const qtyTab = lines.reduce((a,l)=>a + (Number(l.qty)||0), 0);
+          if (y + 10 > PAGE_HEIGHT - MARGIN_BOTTOM) { doc.addPage(); y = MARGIN_TOP; }
+          doc.setFontSize(11);
+          doc.text(`Total ${brand} — ${sub.label} : ${totalTab.toFixed(2)} € | Qté : ${qtyTab}`, 15, y);
+          y += 8;
+
+          if (comment) {
+            const linesText = doc.splitTextToSize('Commentaire : ' + comment, 180);
+            const boxH = linesText.length * 5 + 7;
+            if (y + boxH > PAGE_HEIGHT - MARGIN_BOTTOM) { doc.addPage(); y = MARGIN_TOP; }
+            doc.rect(13, y - 4, 184, boxH);
+            doc.text(linesText, 15, y);
+            y += boxH + 8;
+          } else {
+            y += 4;
+          }
+        }
+      }
+
+      const globalTotal = (order.lines || []).reduce((a,l)=>a + (Number(l.qty)||0)*(Number(l.pu)||0), 0);
+      if (y + 12 > PAGE_HEIGHT - MARGIN_BOTTOM) { doc.addPage(); y = MARGIN_TOP; }
+      doc.setFontSize(16);
+      doc.text(`Montant total : ${globalTotal.toFixed(2)} €`, 15, y);
+      y += 10;
+
+      const globalComment = order.comments?.global || '';
+      if (globalComment) {
+        const linesText = doc.splitTextToSize('Commentaire global : ' + globalComment, 180);
+        const boxH = linesText.length * 5 + 7;
+        if (y + boxH > PAGE_HEIGHT - MARGIN_BOTTOM) { doc.addPage(); y = MARGIN_TOP; }
+        doc.setFontSize(11);
+        doc.rect(13, y - 4, 184, boxH);
+        doc.text(linesText, 15, y);
+      }
+
+      const safeClient = (order.client || 'client').replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '_');
+      doc.save(`commande_televente_lub_${safeClient || 'client'}.pdf`);
+    }
+
+    document.getElementById('btnRefresh').addEventListener('click', fetchOrders);
+    document.getElementById('searchInput').addEventListener('input', renderOrders);
+    document.getElementById('btnAddLine').addEventListener('click', () => appendLineRow({ tab: '', ref: '', produit: '', pu: 0, qty: 1 }));
+    document.getElementById('btnSave').addEventListener('click', saveOrder);
+    document.getElementById('btnPdf').addEventListener('click', downloadPdf);
+
+    document.querySelectorAll('.tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelector('.tab.active')?.classList.remove('active');
+        btn.classList.add('active');
+        currentOrigin = btn.dataset.origin;
+        currentOrder = null;
+        renderEditor();
+        fetchOrders();
+      });
+    });
+
+    fetchOrders();
+  </script>
+</body>
+</html>
