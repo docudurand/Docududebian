@@ -18,7 +18,11 @@ import { PDFDocument as PDFLib, StandardFonts, rgb } from "pdf-lib";
 import ftp from "basic-ftp";
 import ExcelJS from "exceljs";
 import QRCode from "qrcode";
+import session from "express-session";
+import helmet from "helmet";
 import mailLogsRouter from "./routes/mail-logs.js";
+import adminEditorRouter from "./routes/admin-json-editor.js";
+import * as ftpStorage from "./ftpStorage.js";
 
 import * as stats from "./stats.js";
 import * as visits from "./visits.js";
@@ -105,6 +109,28 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
+
+app.use(helmet({ contentSecurityPolicy: false }));
+
+const SESSION_SECRET =
+  String(process.env.SESSION_SECRET || "").trim() ||
+  String(process.env.ADMIN_SECRET_KEY || "").trim() ||
+  "change-me";
+
+app.use(
+  session({
+    name: "dd_admin_session",
+    secret: SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: "auto",
+      maxAge: 6 * 60 * 60 * 1000,
+    },
+  })
+);
 
 // Log uniquement les erreurs 5xx avec temps de traitement
 app.use((req, res, next) => {
@@ -1303,6 +1329,8 @@ app.post("/presence/adjust-conges", async (req, res) => {
 app.use("/presences", express.static(path.join(__dirname, "presences")));
 app.use("/public", express.static(path.join(process.cwd(), "public")));
 app.use("/api/ramasse", ramasseRouter);
+
+app.use(adminEditorRouter());
 app.get("/ramasse", (req, res) => res.redirect("/public/ramasse.html"));
 
 app.use((req, res, next) => {
@@ -1442,7 +1470,7 @@ async function ftpClient(){
   await client.access({
     host: process.env.FTP_HOST,
     user: process.env.FTP_USER,
-    password: process.env.FTP_PASSWORD,
+    password: process.env.FTP_PASS || process.env.FTP_PASSWORD,
     port: process.env.FTP_PORT ? Number(process.env.FTP_PORT) : 21,
     secure: String(process.env.FTP_SECURE||"false")==="true",
     secureOptions: tlsOptions()
@@ -2130,21 +2158,73 @@ function parseEnvJSON(raw, fallback) {
   }
 }
 
-app.get("/api/pl/liens-garantie-retour", (_req, res) => {
-  const data = parseEnvJSON(process.env.PL_LIENS_GARANTIE_RETOUR_JSON, []);
-  res.setHeader("Cache-Control", "no-store");
-  res.json(data);
+async function loadJsonFromFtpOrEnv(filename, envVarName, fallback) {
+  try {
+    const data = await ftpStorage.readJson(filename);
+    if (data != null) return data;
+  } catch (e) {
+    console.warn("[FTP] lecture JSON failed:", filename, e?.message || e);
+  }
+
+  if (!envVarName) return fallback;
+  const raw = process.env[envVarName];
+  if (!raw) return fallback;
+
+  let parsed;
+  try {
+    parsed = JSON.parse(String(raw).trim().replace(/^['"]|['"]$/g, ""));
+  } catch {
+    throw new Error(`${envVarName} invalide`);
+  }
+
+  try {
+    await ftpStorage.writeJson(filename, parsed, { backup: false });
+  } catch (e) {
+    console.warn("[FTP] bootstrap write failed:", filename, e?.message || e);
+  }
+
+  return parsed;
+}
+
+app.get("/api/pl/liens-garantie-retour", async (_req, res) => {
+  try {
+    const data = await loadJsonFromFtpOrEnv(
+      "pl_liens_garantie_retour.json",
+      "PL_LIENS_GARANTIE_RETOUR_JSON",
+      []
+    );
+    res.setHeader("Cache-Control", "no-store");
+    res.json(data);
+  } catch (e) {
+    return res.status(500).json({ error: "PL_LIENS_GARANTIE_RETOUR_JSON invalide" });
+  }
 });
 
-app.get("/api/vl/retour-garantie", (_req, res) => {
-  const data = parseEnvJSON(process.env.VL_RETOUR_GARANTIE_JSON, {});
-  res.setHeader("Cache-Control", "no-store");
-  res.json(data);
+app.get("/api/vl/retour-garantie", async (_req, res) => {
+  try {
+    const data = await loadJsonFromFtpOrEnv(
+      "vl_retour_garantie.json",
+      "VL_RETOUR_GARANTIE_JSON",
+      {}
+    );
+    res.setHeader("Cache-Control", "no-store");
+    res.json(data);
+  } catch (e) {
+    return res.status(500).json({ error: "VL_RETOUR_GARANTIE_JSON invalide" });
+  }
 });
-app.get("/api/vl/liens-formulaire-garantie", (_req, res) => {
-  const data = parseEnvJSON(process.env.VL_LIENS_FORMULAIRE_GARANTIE_JSON, []);
-  res.setHeader("Cache-Control", "no-store");
-  res.json(data);
+app.get("/api/vl/liens-formulaire-garantie", async (_req, res) => {
+  try {
+    const data = await loadJsonFromFtpOrEnv(
+      "vl_liens_formulaire_garantie.json",
+      "VL_LIENS_FORMULAIRE_GARANTIE_JSON",
+      []
+    );
+    res.setHeader("Cache-Control", "no-store");
+    res.json(data);
+  } catch (e) {
+    return res.status(500).json({ error: "VL_LIENS_FORMULAIRE_GARANTIE_JSON invalide" });
+  }
 });
 // Pages statiques PL / VL
 app.use("/pl", express.static(path.join(__dirname, "pl"), {
@@ -2167,14 +2247,20 @@ app.use("/garantie", express.static(path.join(__dirname, "garantie"), {
 }));
 
 // Contacts fournisseurs (depuis env JSON)
-app.get("/api/util/contacts-fournisseurs", (_req, res) => {
+app.get("/api/util/contacts-fournisseurs", async (_req, res) => {
   try {
-    const raw = process.env.CONTACTS_FOURNISSEURS_JSON || "[]";
-    const data = JSON.parse(raw);
+    const data = await loadJsonFromFtpOrEnv(
+      "contacts_fournisseurs.json",
+      "CONTACTS_FOURNISSEURS_JSON",
+      []
+    );
     res.setHeader("Cache-Control", "no-store");
     return res.json(data);
   } catch (e) {
-    return res.status(500).json({ error: "CONTACTS_FOURNISSEURS_JSON invalid", details: String(e?.message || e) });
+    return res.status(500).json({
+      error: "CONTACTS_FOURNISSEURS_JSON invalid",
+      details: String(e?.message || e),
+    });
   }
 });
 

@@ -13,6 +13,7 @@ import { fileURLToPath } from "url";
 import { incrementRamasseMagasin, getCompteurs } from "../compteur.js";
 import { transporter, fromEmail } from "../mailer.js";
 import { sendMailWithLog } from "../mailLog.js";
+import * as ftpStorage from "../ftpStorage.js";
 
 // Chemins utilitaires
 const __filename = fileURLToPath(import.meta.url);
@@ -45,16 +46,6 @@ const RAMASSE_SECRET =
   process.env.PRESENCES_LEAVES_PASSWORD ||
   process.env.LEAVES_PASS ||
   "change-me";
-
-// Emplacements possibles des JSON
-const FOURNISSEUR_PATHS = [
-  path.resolve(__dirname, "fournisseur.json"),
-  path.resolve(__dirname, "../fournisseur.json"),
-];
-const MAGASINS_PATHS = [
-  path.resolve(__dirname, "magasins.json"),
-  path.resolve(__dirname, "../magasins.json"),
-];
 
 // Dedoublonnage des envois
 const RECENT_POST_RAMASSE = new Map();
@@ -106,20 +97,6 @@ const upload = multer({
   limits: { fileSize: 24 * 1024 * 1024 },
 });
 
-// Charge un JSON depuis une liste de chemins
-function loadJsonFrom(paths, fallback) {
-  for (const p of paths) {
-    try {
-      if (fs.existsSync(p)) {
-        const raw = fs.readFileSync(p, "utf8");
-        return JSON.parse(raw);
-      }
-    } catch {
-    }
-  }
-  return fallback;
-}
-
 // Fournisseurs definis en variable d'env (optionnel)
 let ENV_FOURNISSEURS;
 (() => {
@@ -137,41 +114,53 @@ let ENV_FOURNISSEURS;
   }
 })();
 
-// Liste des fournisseurs (env ou fichier)
-function loadFournisseurs() {
+// Liste des fournisseurs (env ou FTP)
+async function loadFournisseurs() {
   if (Array.isArray(ENV_FOURNISSEURS)) {
     return ENV_FOURNISSEURS;
   }
-  const arr = loadJsonFrom(FOURNISSEUR_PATHS, []);
-  return Array.isArray(arr) ? arr : [];
+  try {
+    const arr = await ftpStorage.readJson("fournisseur.json");
+    if (Array.isArray(arr)) return arr;
+  } catch (e) {
+    console.warn("[RAMASSE] FTP fournisseur.json read failed:", e?.message || e);
+  }
+  if (Array.isArray(ENV_FOURNISSEURS)) {
+    try {
+      await ftpStorage.writeJson("fournisseur.json", ENV_FOURNISSEURS, { backup: false });
+    } catch {}
+    return ENV_FOURNISSEURS;
+  }
+  return Array.isArray(ENV_FOURNISSEURS) ? ENV_FOURNISSEURS : [];
 }
 
 // Liste des magasins deduite des fournisseurs
-function loadMagasins() {
-  const data = loadJsonFrom(MAGASINS_PATHS, []);
-  if (Array.isArray(data) && data.length) {
-    return Array.from(
-      new Set(
-        data
-          .map(x => (typeof x === "string" ? x : (x?.name || "")))
-          .filter(Boolean)
-      )
-    );
-  }
+async function loadMagasins() {
+  try {
+    const data = await ftpStorage.readJson("magasins.json");
+    if (Array.isArray(data) && data.length) {
+      return Array.from(
+        new Set(
+          data
+            .map((x) => (typeof x === "string" ? x : x?.name || ""))
+            .filter(Boolean)
+        )
+      );
+    }
+  } catch {}
   const set = new Set();
-  for (const f of loadFournisseurs()) {
+  const fournisseurs = await loadFournisseurs();
+  for (const f of fournisseurs) {
     if (f.magasin) set.add(String(f.magasin));
   }
   return Array.from(set);
 }
 
 // Recherche un fournisseur par nom
-function findFournisseur(name) {
-  const list = loadFournisseurs();
+async function findFournisseur(name) {
+  const list = await loadFournisseurs();
   const n = String(name || "").trim().toLowerCase();
-  return list.find(
-    s => String(s.name || "").trim().toLowerCase() === n
-  );
+  return list.find((s) => String(s.name || "").trim().toLowerCase() === n);
 }
 
 // Validation email simple
@@ -472,7 +461,7 @@ async function ftpUpload(localPath, remoteDir) {
       host: process.env.FTP_HOST,
       port: Number(process.env.FTP_PORT || 21),
       user: process.env.FTP_USER,
-      password: process.env.FTP_PASSWORD,
+      password: process.env.FTP_PASS || process.env.FTP_PASSWORD,
       secure: String(process.env.FTP_SECURE || "false") === "true",
       secureOptions: {
         rejectUnauthorized:
@@ -511,16 +500,18 @@ function shouldSendAckOnce(sig) {
 }
 
 // API: liste fournisseurs (pour le formulaire)
-router.get("/fournisseurs", (_req, res) => {
-  const out = loadFournisseurs().map(
-    ({ name, magasin, infoLivreur }) => ({ name, magasin, infoLivreur })
-  );
+router.get("/fournisseurs", async (_req, res) => {
+  const out = (await loadFournisseurs()).map(({ name, magasin, infoLivreur }) => ({
+    name,
+    magasin,
+    infoLivreur,
+  }));
   res.json(out);
 });
 
 // API: liste magasins (pour le formulaire)
-router.get("/magasins", (_req, res) => {
-  res.json(loadMagasins());
+router.get("/magasins", async (_req, res) => {
+  res.json(await loadMagasins());
 });
 
 // API: stats ramasse
@@ -573,7 +564,7 @@ router.post("/", upload.single("file"), async (req, res) => {
       });
     }
 
-    const four = findFournisseur(fournisseur);
+    const four = await findFournisseur(fournisseur);
     if (!four) {
       return res
         .status(400)

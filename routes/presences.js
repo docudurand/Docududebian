@@ -51,7 +51,7 @@ async function openFtp() {
   await client.access({
     host: process.env.FTP_HOST,
     user: process.env.FTP_USER,
-    password: process.env.FTP_PASSWORD,
+    password: process.env.FTP_PASS || process.env.FTP_PASSWORD,
     port: process.env.FTP_PORT ? Number(process.env.FTP_PORT) : 21,
     secure: String(process.env.FTP_SECURE || "false") === "true",
     secureOptions: tlsOptions(),

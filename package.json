@@ -9,7 +9,8 @@
     "start": "node server.js",
     "start:skip-check": "node server.js",
     "dev": "node --watch server.js",
-    "check": "node pre-start-check.js"
+    "check": "node pre-start-check.js",
+    "migrate:json-env-to-ftp": "node scripts/migrate-json-env-to-ftp.js"
   },
   "engines": {
     "node": ">=20.0.0"
@@ -23,11 +24,14 @@
     "dayjs": "^1.11.11",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "express-rate-limit": "^7.3.0",
+    "express-session": "^1.17.3",
     "http-proxy-middleware": "^3.0.5",
     "helmet": "^7.1.0",
     "mime-types": "^3.0.1",
     "multer": "^2.0.2",
     "nodemailer": "^7.0.5",
+    "otplib": "^12.0.1",
     "pdf-lib": "^1.17.1",
     "pdfkit": "^0.17.1",
     "qrcode": "^1.5.4",

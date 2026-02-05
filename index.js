@@ -3,6 +3,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import * as ftpStorage from './ftpStorage.js';
 
 // Chargement des variables d'environnement
 dotenv.config();
@@ -25,10 +26,34 @@ function parseEnvJSON(raw, fallback) {
   return JSON.parse(s);
 }
 
-// API: liens garantie/retour PL
-router.get("/api/pl/liens-garantie-retour", (_req, res) => {
+async function loadJsonFromFtpOrEnv(filename, envVarName, fallback) {
   try {
-    const data = parseEnvJSON(process.env.PL_LIENS_GARANTIE_RETOUR_JSON, []);
+    const data = await ftpStorage.readJson(filename);
+    if (data != null) return data;
+  } catch {}
+
+  const raw = process.env[envVarName];
+  if (!raw) return fallback;
+  let parsed;
+  try {
+    parsed = JSON.parse(String(raw).trim().replace(/^['"]|['"]$/g, ""));
+  } catch {
+    throw new Error(`${envVarName} invalide`);
+  }
+  try {
+    await ftpStorage.writeJson(filename, parsed, { backup: false });
+  } catch {}
+  return parsed;
+}
+
+// API: liens garantie/retour PL
+router.get("/api/pl/liens-garantie-retour", async (_req, res) => {
+  try {
+    const data = await loadJsonFromFtpOrEnv(
+      "pl_liens_garantie_retour.json",
+      "PL_LIENS_GARANTIE_RETOUR_JSON",
+      []
+    );
     res.setHeader("Cache-Control", "no-store");
     return res.json(data);
   } catch {
@@ -37,9 +62,13 @@ router.get("/api/pl/liens-garantie-retour", (_req, res) => {
 });
 
 // API: liens formulaire garantie VL
-router.get("/api/vl/liens-formulaire-garantie", (_req, res) => {
+router.get("/api/vl/liens-formulaire-garantie", async (_req, res) => {
   try {
-    const data = parseEnvJSON(process.env.VL_LIENS_FORMULAIRE_GARANTIE_JSON, []);
+    const data = await loadJsonFromFtpOrEnv(
+      "vl_liens_formulaire_garantie.json",
+      "VL_LIENS_FORMULAIRE_GARANTIE_JSON",
+      []
+    );
     res.setHeader("Cache-Control", "no-store");
     return res.json(data);
   } catch {
@@ -49,9 +78,13 @@ router.get("/api/vl/liens-formulaire-garantie", (_req, res) => {
 
 
 // API: retour garantie VL
-router.get("/api/vl/retour-garantie", (_req, res) => {
+router.get("/api/vl/retour-garantie", async (_req, res) => {
   try {
-    const data = parseEnvJSON(process.env.VL_RETOUR_GARANTIE_JSON, {});
+    const data = await loadJsonFromFtpOrEnv(
+      "vl_retour_garantie.json",
+      "VL_RETOUR_GARANTIE_JSON",
+      {}
+    );
     res.setHeader("Cache-Control", "no-store");
     return res.json(data);
   } catch {
