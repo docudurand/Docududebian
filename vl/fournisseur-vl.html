@@ -314,5 +314,97 @@
 <script src="../assets/auth.js"></script>
 <script>requireAuth();</script>
 <script src="../assets/app.js"></script>
+<script>
+(function(){
+  const main = document.querySelector(".ds-main");
+  const original = main ? main.innerHTML : "";
+  const API = "/api/vl/fournisseur-vl";
+
+  const esc = (s="") => String(s)
+    .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+
+  function supplierCell(item){
+    if (item.url) {
+      return '<a class="supplier-link" href="' + esc(item.url) + '" rel="noopener" target="_blank">' + esc(item.name || "") + '</a>';
+    }
+    return esc(item.name || "");
+  }
+
+  function buildFournisseurs(categories){
+    const head = "<thead><tr><th>Fournisseur</th><th>Délais</th><th>Heure limite</th><th>Infos</th></tr></thead>";
+    return categories.map(cat => {
+      const rows = (cat.items || []).map(it => {
+        return "<tr><td>" + supplierCell(it) + "</td><td>" + esc(it.delais||"") + "</td><td>" + esc(it.heureLimite||"") + "</td><td>" + esc(it.infos||"") + "</td></tr>";
+      }).join("");
+      return (
+        '<section class="ds-section" data-title="' + esc(cat.title || "") + '">' +
+        '<h2 class="ds-subtitle">' + esc(cat.title || "") + '</h2>' +
+        '<div class="table-wrap"><table class="ds-table">' + head + "<tbody>" + rows + "</tbody></table></div>" +
+        '</section>'
+      );
+    }).join("");
+  }
+
+  function buildDepots(depots){
+    const blocks = (depots || []).map(dep => {
+      const rows = (dep.items || []).map(it => {
+        return "<tr><td class=\"depot-name\">" + esc(it.name||"") + "</td><td class=\"depot-code\">" + esc(it.code||"") + "</td></tr>";
+      }).join("");
+      return (
+        '<div class="depot-group">' +
+        '<div class="depot-label">' + esc(dep.name || "") + " :</div>" +
+        '<table class="depot-table"><tbody>' + rows + "</tbody></table>" +
+        "</div>"
+      );
+    }).join("");
+    return '<div class="depot-wrap">' + blocks + "</div>";
+  }
+
+  function buildBack2Car(rows){
+    const head = "<thead><tr><th>Site / Agence</th><th>Code</th></tr></thead>";
+    const body = (rows || []).map(r => "<tr><td>" + esc(r.site||"") + "</td><td>" + esc(r.code||"") + "</td></tr>").join("");
+    return '<div class="table-wrap"><table class="ds-table">' + head + "<tbody>" + body + "</tbody></table></div>";
+  }
+
+  function buildHub(rows){
+    const body = (rows || []).map(r => "<tr><td>" + esc(r.label||"") + "</td></tr>").join("");
+    return '<div class="table-wrap"><table class="ds-table hub-table"><tbody>' + body + "</tbody></table></div>";
+  }
+
+  async function load(){
+    const r = await fetch(API, { cache:"no-store" });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return r.json();
+  }
+
+  load().then(data => {
+    if (!main || !data) return;
+    const html =
+      '<section class="ds-anchor" id="fournisseur">' +
+        '<h1 class="ds-title">FOURNISSEUR</h1>' +
+        buildFournisseurs(data.categories || []) +
+      '</section>' +
+      '<section class="ds-anchor" id="liste-depot">' +
+        '<h1 class="ds-title">LISTE DEPOT</h1>' +
+        buildDepots(data.depots || []) +
+      '</section>' +
+      '<section class="ds-anchor" id="code-back2car">' +
+        '<h1 class="ds-title">CODE BACK 2 CAR</h1>' +
+        buildBack2Car(data.back2car || []) +
+      '</section>' +
+      '<section class="ds-anchor" id="code-hub">' +
+        '<h1 class="ds-title">CODE FOURNISSEUR HUB</h1>' +
+        '<section class="ds-section" data-title="CODE FOURNISSEUR HUB">' +
+          '<h2 class="ds-subtitle">CODE FOURNISSEUR HUB</h2>' +
+          buildHub(data.hubCodes || []) +
+        '</section>' +
+      '</section>';
+    main.innerHTML = html;
+  }).catch(err => {
+    if (main) main.innerHTML = original + "<div class=\"ds-placeholder\" style=\"margin-top:18px\">Erreur chargement JSON : " + err.message + "</div>";
+  });
+})();
+</script>
 </body>
 </html>

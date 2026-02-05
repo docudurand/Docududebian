@@ -5,6 +5,7 @@ import crypto from "crypto";
 
 import * as ftpStorage from "../ftpStorage.js";
 import { registry, getByKey } from "../jsonRegistry.js";
+import { seedFournisseurPl, seedSiteIdentificationOe, seedFournisseurVl } from "../jsonSeedFromHtml.js";
 import {
   loadAuth,
   saveAuth,
@@ -86,11 +87,13 @@ function editorPage(baseUrl, csrfToken) {
     <select id="pageKey"></select>
     <div class="row" style="margin-top:12px">
       <button class="btn" id="btnLoad" type="button">Charger</button>
-      <button class="btn secondary" id="btnBeautify" type="button">Beautify</button>
       <button class="btn" id="btnSave" type="button">Enregistrer</button>
     </div>
-    <label for="jsonArea">JSON</label>
-    <textarea id="jsonArea" spellcheck="false"></textarea>
+    <div id="editorArea" style="margin-top:14px"></div>
+    <details style="margin-top:12px">
+      <summary class="muted" style="cursor:pointer">JSON brut (avancé)</summary>
+      <textarea id="jsonArea" spellcheck="false" style="margin-top:8px"></textarea>
+    </details>
     <div class="row" style="margin-top:10px">
       <div class="muted">Dernière modification: <span id="lastMod">—</span></div>
     </div>
@@ -106,8 +109,11 @@ function editorPage(baseUrl, csrfToken) {
     const registry = ${registryJson};
     const sel = document.getElementById("pageKey");
     const area = document.getElementById("jsonArea");
+    const editorArea = document.getElementById("editorArea");
     const msg = document.getElementById("msg");
     const lastMod = document.getElementById("lastMod");
+    let currentData = null;
+    let currentKey = null;
 
     registry.forEach(r => {
       const opt = document.createElement("option");
@@ -116,10 +122,379 @@ function editorPage(baseUrl, csrfToken) {
       sel.appendChild(opt);
     });
 
+    const schemas = {
+      links: { type: "table", columns: [
+        { key: "label", label: "Label" },
+        { key: "url", label: "URL" }
+      ]},
+      fournisseur_pl: { type: "table", columns: [
+        { key: "fournisseur", label: "Fournisseur" },
+        { key: "code", label: "Code" },
+        { key: "pieces", label: "Pièces", multiline: true }
+      ]},
+      site_identification_oe: { type: "table", columns: [
+        { key: "marque", label: "Marque" },
+        { key: "url", label: "URL" },
+        { key: "note", label: "Note" }
+      ]},
+      fournisseurs_ramasse: { type: "table", columns: [
+        { key: "name", label: "Fournisseur" },
+        { key: "magasin", label: "Magasin" },
+        { key: "recipients", label: "Destinataires (séparés par ,)" },
+        { key: "cc", label: "CC (séparés par ,)" },
+        { key: "infoLivreur", label: "Info livreur" }
+      ]},
+      contacts_fournisseurs: { type: "rowTable", columns: [
+        "Fournisseur",
+        "ADV - Contact",
+        "ADV - Téléphone",
+        "ADV - Mail",
+        "Commerce - Contact",
+        "Commerce - Téléphone",
+        "Commerce - Mail"
+      ]},
+      retour_garantie_vl: { type: "multi", blocks: [
+        {
+          key: "mailsRetour",
+          label: "Mails retour",
+          type: "table",
+          columns: [
+            { key: "fournisseur", label: "Fournisseur" },
+            { key: "email", label: "Email" }
+          ]
+        },
+        {
+          key: "contactsGarantie",
+          label: "Contacts garantie",
+          type: "table",
+          columns: [
+            { key: "fournisseur", label: "Fournisseur" },
+            { key: "suivie", label: "Contact suivie" },
+            { key: "demande", label: "Contact demande" },
+            { key: "commercial", label: "Contact commercial" },
+            { key: "notes", label: "Notes", multiline: true }
+          ]
+        }
+      ]},
+      atelier_data: { type: "multi", blocks: [
+        {
+          key: "lignes",
+          label: "Lignes",
+          type: "table",
+          columns: [
+            { key: "ligne", label: "Ligne" },
+            { key: "libelle", label: "Libellé" }
+          ]
+        },
+        {
+          key: "regles",
+          label: "Règles",
+          type: "table",
+          columns: [
+            { key: "service", label: "Service" },
+            { key: "ligne", label: "Ligne" },
+            { key: "cylindres", label: "Cylindres" },
+            { key: "soupapes", label: "Soupapes" },
+            { key: "carburant", label: "Carburant" },
+            { key: "vl_pl", label: "VL/PL" },
+            { key: "reference", label: "Référence" },
+            { key: "libelleref", label: "Libellé ref" },
+            { key: "prixht", label: "Prix HT" }
+          ]
+        }
+      ]},
+      fournisseur_vl: { type: "multi", blocks: [
+        {
+          key: "categories",
+          label: "Fournisseurs par catégorie",
+          type: "group",
+          groupLabel: "Catégorie",
+          columns: [
+            { key: "name", label: "Fournisseur" },
+            { key: "url", label: "URL" },
+            { key: "delais", label: "Délais" },
+            { key: "heureLimite", label: "Heure limite" },
+            { key: "infos", label: "Infos", multiline: true }
+          ]
+        },
+        {
+          key: "depots",
+          label: "Liste dépôt",
+          type: "group",
+          groupLabel: "Dépôt",
+          columns: [
+            { key: "name", label: "Fournisseur" },
+            { key: "code", label: "Code" }
+          ]
+        },
+        {
+          key: "back2car",
+          label: "Code Back 2 Car",
+          type: "table",
+          columns: [
+            { key: "site", label: "Site / Agence" },
+            { key: "code", label: "Code" }
+          ]
+        },
+        {
+          key: "hubCodes",
+          label: "Code fournisseur HUB",
+          type: "table",
+          columns: [
+            { key: "label", label: "Libellé" }
+          ]
+        }
+      ]}
+    };
+
     function setMsg(text, ok) {
       msg.textContent = text || "";
       msg.style.color = ok ? "green" : "crimson";
     }
+
+    function createInput(value, multiline) {
+      if (multiline) {
+        const ta = document.createElement("textarea");
+        ta.value = value || "";
+        ta.rows = 2;
+        return ta;
+      }
+      const input = document.createElement("input");
+      input.type = "text";
+      input.value = value || "";
+      return input;
+    }
+
+    function renderTable(container, rows, columns) {
+      const table = document.createElement("table");
+      table.style.width = "100%";
+      table.style.borderCollapse = "collapse";
+      table.innerHTML = "<thead><tr>" + columns.map(c => "<th style=\\"text-align:left;border-bottom:1px solid #e5e7eb;padding:8px\\">" + (c.label || c) + "</th>").join("") + "<th></th></tr></thead>";
+      const tbody = document.createElement("tbody");
+      table.appendChild(tbody);
+
+      function addRow(rowData) {
+        const tr = document.createElement("tr");
+        columns.forEach(col => {
+          const key = col.key || col;
+          const td = document.createElement("td");
+          td.style.padding = "6px 8px";
+          td.style.borderBottom = "1px solid #f1f5f9";
+          const input = createInput(rowData ? rowData[key] : "", col.multiline);
+          input.dataset.key = key;
+          td.appendChild(input);
+          tr.appendChild(td);
+        });
+        const tdAct = document.createElement("td");
+        tdAct.style.padding = "6px 8px";
+        const del = document.createElement("button");
+        del.type = "button";
+        del.textContent = "Supprimer";
+        del.className = "btn secondary";
+        del.onclick = () => tr.remove();
+        tdAct.appendChild(del);
+        tr.appendChild(tdAct);
+        tbody.appendChild(tr);
+      }
+
+      (rows || []).forEach(r => addRow(r));
+
+      const addBtn = document.createElement("button");
+      addBtn.type = "button";
+      addBtn.className = "btn secondary";
+      addBtn.textContent = "Ajouter une ligne";
+      addBtn.onclick = () => addRow({});
+
+      container.appendChild(table);
+      container.appendChild(addBtn);
+
+      return () => {
+        const out = [];
+        tbody.querySelectorAll("tr").forEach(tr => {
+          const obj = {};
+          let has = false;
+          tr.querySelectorAll("input,textarea").forEach(inp => {
+            const v = String(inp.value || "").trim();
+            obj[inp.dataset.key] = v;
+            if (v) has = true;
+          });
+          if (has) out.push(obj);
+        });
+        return out;
+      };
+    }
+
+    function renderRowTable(container, rows, columns) {
+      const table = document.createElement("table");
+      table.style.width = "100%";
+      table.style.borderCollapse = "collapse";
+      table.innerHTML = "<thead><tr>" + columns.map(c => "<th style=\\"text-align:left;border-bottom:1px solid #e5e7eb;padding:8px\\">" + c + "</th>").join("") + "<th></th></tr></thead>";
+      const tbody = document.createElement("tbody");
+      table.appendChild(tbody);
+
+      function addRow(rowData) {
+        const tr = document.createElement("tr");
+        columns.forEach((col, idx) => {
+          const td = document.createElement("td");
+          td.style.padding = "6px 8px";
+          td.style.borderBottom = "1px solid #f1f5f9";
+          const input = createInput(rowData ? rowData[idx] : "", false);
+          input.dataset.idx = idx;
+          td.appendChild(input);
+          tr.appendChild(td);
+        });
+        const tdAct = document.createElement("td");
+        tdAct.style.padding = "6px 8px";
+        const del = document.createElement("button");
+        del.type = "button";
+        del.textContent = "Supprimer";
+        del.className = "btn secondary";
+        del.onclick = () => tr.remove();
+        tdAct.appendChild(del);
+        tr.appendChild(tdAct);
+        tbody.appendChild(tr);
+      }
+
+      (rows || []).forEach(r => addRow(r));
+
+      const addBtn = document.createElement("button");
+      addBtn.type = "button";
+      addBtn.className = "btn secondary";
+      addBtn.textContent = "Ajouter une ligne";
+      addBtn.onclick = () => addRow([]);
+
+      container.appendChild(table);
+      container.appendChild(addBtn);
+
+      return () => {
+        const out = [];
+        tbody.querySelectorAll("tr").forEach(tr => {
+          const row = [];
+          let has = false;
+          tr.querySelectorAll("input,textarea").forEach(inp => {
+            const v = String(inp.value || "").trim();
+            row[Number(inp.dataset.idx)] = v;
+            if (v) has = true;
+          });
+          if (has) out.push(row);
+        });
+        return out;
+      };
+    }
+
+    function renderGroupTable(container, groups, columns, groupLabel) {
+      const collectFns = [];
+      const list = document.createElement("div");
+      list.style.display = "grid";
+      list.style.gap = "16px";
+
+      function addGroup(group) {
+        const card = document.createElement("div");
+        card.style.border = "1px solid #e5e7eb";
+        card.style.borderRadius = "12px";
+        card.style.padding = "12px";
+        const title = document.createElement("input");
+        title.type = "text";
+        title.placeholder = groupLabel;
+        title.value = group?.title || group?.name || "";
+        title.style.marginBottom = "8px";
+        title.style.width = "100%";
+        card.appendChild(title);
+        const collector = renderTable(card, group?.items || [], columns);
+        list.appendChild(card);
+        collectFns.push(() => {
+          const t = String(title.value || "").trim();
+          const items = collector();
+          return t ? { title: t, items } : null;
+        });
+      }
+
+      (groups || []).forEach(g => addGroup(g));
+
+      const addBtn = document.createElement("button");
+      addBtn.type = "button";
+      addBtn.className = "btn secondary";
+      addBtn.textContent = "Ajouter " + groupLabel;
+      addBtn.onclick = () => addGroup({});
+
+      container.appendChild(list);
+      container.appendChild(addBtn);
+
+      return () => collectFns.map(fn => fn()).filter(Boolean);
+    }
+
+    function renderEditorForKey(key, data) {
+      editorArea.innerHTML = "";
+      const entry = registry.find(r => r.key === key);
+      const schema = schemas[entry?.editor || ""];
+      if (entry?.editor === "fournisseurs_ramasse" && Array.isArray(data)) {
+        data = data.map(r => ({
+          ...r,
+          recipients: Array.isArray(r.recipients) ? r.recipients.join(", ") : (r.recipients || ""),
+          cc: Array.isArray(r.cc) ? r.cc.join(", ") : (r.cc || "")
+        }));
+      }
+      if (entry?.editor === "retour_garantie_vl") {
+        const mails = Array.isArray(data?.mailsRetour) ? data.mailsRetour : [];
+        const contacts = Array.isArray(data?.contactsGarantie) ? data.contactsGarantie : [];
+        const normMails = mails.map(m => {
+          if (typeof m === "string") {
+            const parts = m.split(":");
+            return { fournisseur: (parts[0] || "").trim(), email: parts.slice(1).join(":").trim() };
+          }
+          return { fournisseur: m?.fournisseur || m?.label || "", email: m?.email || m?.mail || m?.value || "" };
+        });
+        const normContacts = contacts.map(c => ({
+          fournisseur: c?.fournisseur || "",
+          suivie: c?.contactSuivie || c?.contact_suivie || c?.suivie || c?.suivi || "",
+          demande: c?.contactDemande || c?.contact_demande || c?.demande || "",
+          commercial: c?.contactCommercial || c?.contact_commercial || c?.commercial || "",
+          notes: c?.notes || c?.note || ""
+        }));
+        data = { mailsRetour: normMails, contactsGarantie: normContacts };
+      }
+      if (!schema) {
+        editorArea.textContent = "Aucun formulaire défini pour ce JSON.";
+        return () => data;
+      }
+
+      if (schema.type === "table") {
+        return renderTable(editorArea, Array.isArray(data) ? data : [], schema.columns);
+      }
+
+      if (schema.type === "rowTable") {
+        return renderRowTable(editorArea, Array.isArray(data) ? data : [], schema.columns);
+      }
+
+      if (schema.type === "multi") {
+        const blockCollectors = [];
+        (schema.blocks || []).forEach(block => {
+          const section = document.createElement("div");
+          section.style.margin = "12px 0 18px";
+          section.innerHTML = "<div style=\\"font-weight:700;margin-bottom:8px\\">" + block.label + "</div>";
+          if (block.type === "table") {
+            const collect = renderTable(section, data?.[block.key] || [], block.columns);
+            blockCollectors.push(() => [block.key, collect()]);
+          } else if (block.type === "group") {
+            const collect = renderGroupTable(section, data?.[block.key] || [], block.columns, block.groupLabel);
+            blockCollectors.push(() => [block.key, collect()]);
+          }
+          editorArea.appendChild(section);
+        });
+        return () => {
+          const out = {};
+          blockCollectors.forEach(fn => {
+            const [k, v] = fn();
+            out[k] = v;
+          });
+          return out;
+        };
+      }
+
+      return () => data;
+    }
+
+    let collectForm = () => currentData;
 
     document.getElementById("btnLoad").addEventListener("click", async () => {
       setMsg("Chargement...", true);
@@ -128,6 +503,9 @@ function editorPage(baseUrl, csrfToken) {
         const r = await fetch(\`\${BASE}/api/load?key=\${encodeURIComponent(key)}\`, { cache: "no-store" });
         const j = await r.json();
         if (!r.ok) throw new Error(j.error || "Erreur chargement");
+        currentData = j.data;
+        currentKey = key;
+        collectForm = renderEditorForKey(key, j.data);
         area.value = JSON.stringify(j.data, null, 2);
         lastMod.textContent = j.lastModified || "—";
         setMsg("Chargé.", true);
@@ -136,25 +514,25 @@ function editorPage(baseUrl, csrfToken) {
       }
     });
 
-    document.getElementById("btnBeautify").addEventListener("click", () => {
-      try {
-        const parsed = JSON.parse(area.value);
-        area.value = JSON.stringify(parsed, null, 2);
-        setMsg("JSON valide.", true);
-      } catch (e) {
-        setMsg("JSON invalide: " + e.message, false);
-      }
-    });
-
     document.getElementById("btnSave").addEventListener("click", async () => {
       const key = sel.value;
-      let parsed;
-      try {
-        parsed = JSON.parse(area.value);
-      } catch (e) {
-        setMsg("JSON invalide: " + e.message, false);
-        return;
+      const entry = registry.find(r => r.key === key);
+      const schema = schemas[entry?.editor || ""];
+      let parsed = collectForm();
+
+      if (schema && entry?.editor === "fournisseurs_ramasse") {
+        parsed = (parsed || []).map(r => ({
+          name: r.name || "",
+          magasin: r.magasin || "",
+          recipients: String(r.recipients || "")
+            .split(/[;,]/).map(s => s.trim()).filter(Boolean),
+          cc: String(r.cc || "")
+            .split(/[;,]/).map(s => s.trim()).filter(Boolean),
+          infoLivreur: r.infoLivreur || ""
+        }));
       }
+
+      area.value = JSON.stringify(parsed, null, 2);
       setMsg("Enregistrement...", true);
       try {
         const r = await fetch(\`\${BASE}/api/save\`, {
@@ -211,14 +589,14 @@ function loginPage(csrfToken) {
   </div>`);
 }
 
-function backupCodesPage(codes) {
+function backupCodesPage(codes, baseUrl) {
   const list = codes.map(c => `<li><code>${c}</code></li>`).join("");
   return htmlPage("Backup Codes", `
   <div class="card">
     <h1>Backup codes</h1>
     <p>Conservez ces codes en lieu sûr. Ils ne seront affichés qu'une seule fois.</p>
     <ul>${list}</ul>
-    <form method="POST" action="./logout">
+    <form method="POST" action="${baseUrl}/logout">
       <button class="btn danger" type="submit">Fermer</button>
     </form>
   </div>`);
@@ -284,7 +662,7 @@ export default function createAdminEditorRouter() {
     req.session.adminAuthed = true;
     req.session.setupSecret = null;
     res.setHeader("Cache-Control", "no-store");
-    return res.status(200).send(backupCodesPage(codes));
+    return res.status(200).send(backupCodesPage(codes, `/${basePath}`));
   });
 
   router.get(`/${basePath}/login`, limiter, async (req, res) => {
@@ -330,10 +708,22 @@ export default function createAdminEditorRouter() {
     const entry = getByKey(key);
     if (!entry) return res.status(404).json({ ok: false, error: "unknown_key" });
     try {
-      const data = await ftpStorage.readJson(entry.filename);
+      let data = await ftpStorage.readJson(entry.filename);
       if (data == null) {
-        return res.status(404).json({ ok: false, error: "file_not_found" });
+        const seedMap = {
+          "fournisseur-pl": seedFournisseurPl,
+          "site-identification-oe": seedSiteIdentificationOe,
+          "fournisseur-vl": seedFournisseurVl,
+        };
+        const seedFn = seedMap[key];
+        if (seedFn) {
+          data = await seedFn();
+          if (data != null) {
+            try { await ftpStorage.writeJson(entry.filename, data, { backup: false }); } catch {}
+          }
+        }
       }
+      if (data == null) return res.status(404).json({ ok: false, error: "file_not_found" });
       const lastModified = await ftpStorage.getModifiedAt(entry.filename);
       res.setHeader("Cache-Control", "no-store");
       return res.json({ ok: true, data, lastModified, filename: entry.filename });

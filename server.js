@@ -23,6 +23,7 @@ import helmet from "helmet";
 import mailLogsRouter from "./routes/mail-logs.js";
 import adminEditorRouter from "./routes/admin-json-editor.js";
 import * as ftpStorage from "./ftpStorage.js";
+import { seedFournisseurPl, seedSiteIdentificationOe, seedFournisseurVl } from "./jsonSeedFromHtml.js";
 
 import * as stats from "./stats.js";
 import * as visits from "./visits.js";
@@ -2186,6 +2187,31 @@ async function loadJsonFromFtpOrEnv(filename, envVarName, fallback) {
   return parsed;
 }
 
+async function loadJsonFromFtpOrDefault(filename, defaultProvider) {
+  try {
+    const data = await ftpStorage.readJson(filename);
+    if (data != null) return data;
+  } catch (e) {
+    console.warn("[FTP] lecture JSON failed:", filename, e?.message || e);
+  }
+
+  if (typeof defaultProvider !== "function") return null;
+  try {
+    const def = await defaultProvider();
+    if (def != null) {
+      try {
+        await ftpStorage.writeJson(filename, def, { backup: false });
+      } catch (e) {
+        console.warn("[FTP] bootstrap write failed:", filename, e?.message || e);
+      }
+      return def;
+    }
+  } catch (e) {
+    console.warn("[DEFAULT] provider failed:", filename, e?.message || e);
+  }
+  return null;
+}
+
 app.get("/api/pl/liens-garantie-retour", async (_req, res) => {
   try {
     const data = await loadJsonFromFtpOrEnv(
@@ -2224,6 +2250,36 @@ app.get("/api/vl/liens-formulaire-garantie", async (_req, res) => {
     res.json(data);
   } catch (e) {
     return res.status(500).json({ error: "VL_LIENS_FORMULAIRE_GARANTIE_JSON invalide" });
+  }
+});
+
+app.get("/api/pl/fournisseur-pl", async (_req, res) => {
+  try {
+    const data = await loadJsonFromFtpOrDefault("fournisseur_pl.json", () => seedFournisseurPl());
+    res.setHeader("Cache-Control", "no-store");
+    return res.json(Array.isArray(data) ? data : []);
+  } catch (e) {
+    return res.status(500).json({ error: "fournisseur_pl_load_failed" });
+  }
+});
+
+app.get("/api/vl/fournisseur-vl", async (_req, res) => {
+  try {
+    const data = await loadJsonFromFtpOrDefault("fournisseur_vl.json", () => seedFournisseurVl());
+    res.setHeader("Cache-Control", "no-store");
+    return res.json(data || {});
+  } catch (e) {
+    return res.status(500).json({ error: "fournisseur_vl_load_failed" });
+  }
+});
+
+app.get("/api/util/site-identification-oe", async (_req, res) => {
+  try {
+    const data = await loadJsonFromFtpOrDefault("site_identification_oe.json", () => seedSiteIdentificationOe());
+    res.setHeader("Cache-Control", "no-store");
+    return res.json(Array.isArray(data) ? data : []);
+  } catch (e) {
+    return res.status(500).json({ error: "site_identification_oe_load_failed" });
   }
 });
 // Pages statiques PL / VL

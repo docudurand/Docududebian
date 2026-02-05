@@ -42,116 +42,53 @@
 <body>
 
 <table>
-  <tr>
-    <td>RENAULT</td>
-    <td>
-      <a href="https://rpartstore.renault.com/" target="_blank" rel="noopener noreferrer">
-        https://rpartstore.renault.com/
-      </a>
-    </td>
-    <td>IDENTIFIANT NECESSAIRE</td>
-  </tr>
-
-  <tr>
-    <td>PSA</td>
-    <td>
-      <a href="https://public.servicebox-parts.com/socle/?start=true" target="_blank" rel="noopener noreferrer">
-        https://public.servicebox-parts.com/socle/?start=true
-      </a>
-    </td>
-    <td>IDENTIFIANT NECESSAIRE</td>
-  </tr>
-
-  <tr>
-    <td>TESLA</td>
-    <td>
-      <a href="https://epc.tesla.com/fr-FR/catalogs" target="_blank" rel="noopener noreferrer">
-        https://epc.tesla.com/fr-FR/catalogs
-      </a>
-    </td>
-    <td>SANS IDENTIFIANT</td>
-  </tr>
-
-  <tr>
-    <td>ISUZU</td>
-    <td>
-      <a href="https://www.fitinpart.sg/" target="_blank" rel="noopener noreferrer">
-        https://www.fitinpart.sg/
-      </a>
-    </td>
-    <td>SANS IDENTIFIANT</td>
-  </tr>
-
-  <tr>
-    <td>FIAT</td>
-    <td>
-      <a href="https://ajsparts.pl/pages/news.aspx" target="_blank" rel="noopener noreferrer">
-        https://ajsparts.pl/pages/news.aspx
-      </a>
-    </td>
-    <td>IDENTIFIANT NECESSAIRE</td>
-  </tr>
-
-  <tr>
-    <td>MASERATI / FERRARI / LAMBORGHINI / ASTON MARTIN</td>
-    <td>
-      <a href="https://www.eurospares.fr/" target="_blank" rel="noopener noreferrer">
-        https://www.eurospares.fr/
-      </a>
-    </td>
-    <td>SANS IDENTIFIANT</td>
-  </tr>
-
-  <tr>
-    <td>JAGUAR</td>
-    <td>
-      <a href="https://www.sngbarratt.com/Francais/#/uk/home" target="_blank" rel="noopener noreferrer">
-        https://www.sngbarratt.com/Francais/#/uk/home
-      </a>
-    </td>
-    <td>SANS IDENTIFIANT</td>
-  </tr>
-
-  <tr>
-    <td>ANCIENNE ANGLAISE (TRIUMPH / AUSTIN / MG / JAGUAR…)</td>
-    <td>
-      <a href="https://www.betaset.fr/fr/" target="_blank" rel="noopener noreferrer">
-        https://www.betaset.fr/fr/
-      </a>
-    </td>
-    <td>SANS IDENTIFIANT</td>
-  </tr>
-
-  <tr>
-    <td>SAAB / VOLVO</td>
-    <td>
-      <a href="https://www.skandix.de/en/" target="_blank" rel="noopener noreferrer">
-        https://www.skandix.de/en/
-      </a>
-    </td>
-    <td>SANS IDENTIFIANT</td>
-  </tr>
-
-  <tr>
-    <td>HONDA</td>
-    <td>
-      <a href="https://www.pieces-auto-honda.fr/" target="_blank" rel="noopener noreferrer">
-        https://www.pieces-auto-honda.fr/
-      </a>
-    </td>
-    <td>SANS IDENTIFIANT</td>
-  </tr>
-
-  <tr>
-    <td>SSANG YONG</td>
-    <td>
-      <a href="https://www.catcar.info/en/" target="_blank" rel="noopener noreferrer">
-        https://www.catcar.info/en/
-      </a>
-    </td>
-    <td>SITE NON OFFICIEL MAIS RÉF OK</td>
-  </tr>
+  <thead>
+    <tr><th>MARQUE</th><th>LIEN</th><th>NOTE</th></tr>
+  </thead>
+  <tbody id="siteOeBody"></tbody>
 </table>
+
+<script>
+(function(){
+  const tbody = document.getElementById("siteOeBody");
+  async function load(){
+    const r = await fetch("/api/util/site-identification-oe", { cache:"no-store" });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return r.json();
+  }
+  function render(rows){
+    tbody.innerHTML = "";
+    if (!Array.isArray(rows) || rows.length === 0) {
+      tbody.innerHTML = "<tr><td colspan='3' style='padding:14px'>Aucune donnée.</td></tr>";
+      return;
+    }
+    rows.forEach(row => {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      td1.textContent = row.marque || "";
+      const td2 = document.createElement("td");
+      const url = String(row.url || "").trim();
+      if (url) {
+        const a = document.createElement("a");
+        a.href = url;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        a.textContent = url;
+        td2.appendChild(a);
+      }
+      const td3 = document.createElement("td");
+      td3.textContent = row.note || "";
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tr.appendChild(td3);
+      tbody.appendChild(tr);
+    });
+  }
+  load().then(render).catch(err => {
+    tbody.innerHTML = "<tr><td colspan='3' style='padding:14px;color:#842029;font-weight:bold;'>Erreur chargement JSON : " + err.message + "</td></tr>";
+  });
+})();
+</script>
 
 </body>
 </html>
