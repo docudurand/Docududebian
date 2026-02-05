@@ -53,20 +53,31 @@ function htmlPage(title, body) {
   <style>
     :root{color-scheme:light}
     body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;margin:0;padding:24px;background:#f6f7fb;color:#0f172a}
-    .wrap{max-width:980px;margin:0 auto}
-    .card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:20px;box-shadow:0 10px 30px rgba(0,0,0,.06)}
+    .wrap{max-width:1400px;margin:0 auto}
+    .card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:22px;box-shadow:0 10px 30px rgba(0,0,0,.06)}
     h1{font-size:22px;margin:0 0 12px}
     label{display:block;font-weight:700;margin:14px 0 6px}
     input,select,textarea,button{font:inherit}
-    input,select,textarea{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:10px}
-    textarea{min-height:360px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
-    .row{display:flex;gap:10px;flex-wrap:wrap}
+    input,select,textarea{width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:10px;background:#fff}
+    textarea{min-height:260px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
     .btn{background:#2563eb;color:#fff;border:0;padding:10px 16px;border-radius:10px;cursor:pointer;font-weight:700}
     .btn.secondary{background:#e5e7eb;color:#111}
     .btn.danger{background:#b91c1c}
     .msg{margin-top:10px;font-weight:700}
     .muted{color:#6b7280;font-size:13px}
     code{background:#eef2ff;padding:2px 6px;border-radius:6px}
+    table{width:100%;border-collapse:separate;border-spacing:0 6px}
+    th{position:sticky;top:0;background:#f8fafc;border-bottom:1px solid #e5e7eb;padding:10px 8px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.4px}
+    td{vertical-align:top}
+    .grid{display:grid;gap:12px}
+    .wide{overflow:auto;border:1px solid #eef2f7;border-radius:14px;padding:10px;background:#fafbff}
+    .section-title{font-weight:800;margin:10px 0 6px}
+    @media (max-width: 900px){
+      body{padding:12px}
+      .wrap{max-width:100%}
+      th{font-size:11px}
+    }
   </style>
 </head>
 <body>
@@ -89,7 +100,7 @@ function editorPage(baseUrl, csrfToken) {
       <button class="btn" id="btnLoad" type="button">Charger</button>
       <button class="btn" id="btnSave" type="button">Enregistrer</button>
     </div>
-    <div id="editorArea" style="margin-top:14px"></div>
+    <div id="editorArea" class="grid" style="margin-top:14px"></div>
     <details style="margin-top:12px">
       <summary class="muted" style="cursor:pointer">JSON brut (avancé)</summary>
       <textarea id="jsonArea" spellcheck="false" style="margin-top:8px"></textarea>
@@ -256,7 +267,7 @@ function editorPage(baseUrl, csrfToken) {
       if (multiline) {
         const ta = document.createElement("textarea");
         ta.value = value || "";
-        ta.rows = 2;
+        ta.rows = 3;
         return ta;
       }
       const input = document.createElement("input");
@@ -266,27 +277,26 @@ function editorPage(baseUrl, csrfToken) {
     }
 
     function renderTable(container, rows, columns) {
+      const wrap = document.createElement("div");
+      wrap.className = "wide";
       const table = document.createElement("table");
-      table.style.width = "100%";
-      table.style.borderCollapse = "collapse";
-      table.innerHTML = "<thead><tr>" + columns.map(c => "<th style=\\"text-align:left;border-bottom:1px solid #e5e7eb;padding:8px\\">" + (c.label || c) + "</th>").join("") + "<th></th></tr></thead>";
+      table.innerHTML = "<thead><tr>" + columns.map(c => "<th>" + (c.label || c) + "</th>").join("") + "<th></th></tr></thead>";
       const tbody = document.createElement("tbody");
       table.appendChild(tbody);
+      wrap.appendChild(table);
 
       function addRow(rowData) {
         const tr = document.createElement("tr");
         columns.forEach(col => {
           const key = col.key || col;
           const td = document.createElement("td");
-          td.style.padding = "6px 8px";
-          td.style.borderBottom = "1px solid #f1f5f9";
           const input = createInput(rowData ? rowData[key] : "", col.multiline);
           input.dataset.key = key;
+          input.style.minWidth = col.multiline ? "320px" : "160px";
           td.appendChild(input);
           tr.appendChild(td);
         });
         const tdAct = document.createElement("td");
-        tdAct.style.padding = "6px 8px";
         const del = document.createElement("button");
         del.type = "button";
         del.textContent = "Supprimer";
@@ -305,7 +315,7 @@ function editorPage(baseUrl, csrfToken) {
       addBtn.textContent = "Ajouter une ligne";
       addBtn.onclick = () => addRow({});
 
-      container.appendChild(table);
+      container.appendChild(wrap);
       container.appendChild(addBtn);
 
       return () => {
@@ -325,26 +335,25 @@ function editorPage(baseUrl, csrfToken) {
     }
 
     function renderRowTable(container, rows, columns) {
+      const wrap = document.createElement("div");
+      wrap.className = "wide";
       const table = document.createElement("table");
-      table.style.width = "100%";
-      table.style.borderCollapse = "collapse";
-      table.innerHTML = "<thead><tr>" + columns.map(c => "<th style=\\"text-align:left;border-bottom:1px solid #e5e7eb;padding:8px\\">" + c + "</th>").join("") + "<th></th></tr></thead>";
+      table.innerHTML = "<thead><tr>" + columns.map(c => "<th>" + c + "</th>").join("") + "<th></th></tr></thead>";
       const tbody = document.createElement("tbody");
       table.appendChild(tbody);
+      wrap.appendChild(table);
 
       function addRow(rowData) {
         const tr = document.createElement("tr");
         columns.forEach((col, idx) => {
           const td = document.createElement("td");
-          td.style.padding = "6px 8px";
-          td.style.borderBottom = "1px solid #f1f5f9";
           const input = createInput(rowData ? rowData[idx] : "", false);
           input.dataset.idx = idx;
+          input.style.minWidth = "160px";
           td.appendChild(input);
           tr.appendChild(td);
         });
         const tdAct = document.createElement("td");
-        tdAct.style.padding = "6px 8px";
         const del = document.createElement("button");
         del.type = "button";
         del.textContent = "Supprimer";
@@ -363,7 +372,7 @@ function editorPage(baseUrl, csrfToken) {
       addBtn.textContent = "Ajouter une ligne";
       addBtn.onclick = () => addRow([]);
 
-      container.appendChild(table);
+      container.appendChild(wrap);
       container.appendChild(addBtn);
 
       return () => {
@@ -391,8 +400,9 @@ function editorPage(baseUrl, csrfToken) {
       function addGroup(group) {
         const card = document.createElement("div");
         card.style.border = "1px solid #e5e7eb";
-        card.style.borderRadius = "12px";
+        card.style.borderRadius = "14px";
         card.style.padding = "12px";
+        card.style.background = "#fff";
         const title = document.createElement("input");
         title.type = "text";
         title.placeholder = groupLabel;
