@@ -53,8 +53,8 @@ function htmlPage(title, body) {
   <style>
     :root{color-scheme:light}
     body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;margin:0;padding:24px;background:#f6f7fb;color:#0f172a}
-    .wrap{max-width:1400px;margin:0 auto}
-    .card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:22px;box-shadow:0 10px 30px rgba(0,0,0,.06)}
+    .wrap{max-width:none;margin:0 auto;width:100%}
+    .card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:22px;box-shadow:0 10px 30px rgba(0,0,0,.06);width:100%}
     h1{font-size:22px;margin:0 0 12px}
     label{display:block;font-weight:700;margin:14px 0 6px}
     input,select,textarea,button{font:inherit}
@@ -70,9 +70,9 @@ function htmlPage(title, body) {
     table{width:100%;border-collapse:separate;border-spacing:0 6px}
     th{position:sticky;top:0;background:#f8fafc;border-bottom:1px solid #e5e7eb;padding:10px 8px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.4px}
     td{vertical-align:top}
-    .grid{display:grid;gap:12px}
-    .wide{overflow:auto;border:1px solid #eef2f7;border-radius:14px;padding:10px;background:#fafbff}
-    .section-title{font-weight:800;margin:10px 0 6px}
+    .grid{display:grid;gap:26px}
+    .wide{overflow:auto;border:1px solid #eef2f7;border-radius:14px;padding:12px;background:#fafbff;margin-bottom:22px}
+    .section-title{font-weight:800;margin:16px 0 10px}
     @media (max-width: 900px){
       body{padding:12px}
       .wrap{max-width:100%}
@@ -141,7 +141,7 @@ function editorPage(baseUrl, csrfToken) {
       fournisseur_pl: { type: "table", columns: [
         { key: "fournisseur", label: "Fournisseur" },
         { key: "code", label: "Code" },
-        { key: "pieces", label: "Pièces", multiline: true }
+        { key: "pieces", label: "Pièces", multiline: true, rows: 2 }
       ]},
       site_identification_oe: { type: "table", columns: [
         { key: "marque", label: "Marque" },
@@ -183,7 +183,7 @@ function editorPage(baseUrl, csrfToken) {
             { key: "suivie", label: "Contact suivie" },
             { key: "demande", label: "Contact demande" },
             { key: "commercial", label: "Contact commercial" },
-            { key: "notes", label: "Notes", multiline: true }
+            { key: "notes", label: "Notes", multiline: true, rows: 2 }
           ]
         }
       ]},
@@ -225,7 +225,7 @@ function editorPage(baseUrl, csrfToken) {
             { key: "url", label: "URL" },
             { key: "delais", label: "Délais" },
             { key: "heureLimite", label: "Heure limite" },
-            { key: "infos", label: "Infos", multiline: true }
+            { key: "infos", label: "Infos", multiline: true, rows: 2 }
           ]
         },
         {
@@ -263,11 +263,11 @@ function editorPage(baseUrl, csrfToken) {
       msg.style.color = ok ? "green" : "crimson";
     }
 
-    function createInput(value, multiline) {
-      if (multiline) {
+    function createInput(value, col) {
+      if (col && col.multiline) {
         const ta = document.createElement("textarea");
         ta.value = value || "";
-        ta.rows = 3;
+        ta.rows = col.rows || 3;
         return ta;
       }
       const input = document.createElement("input");
@@ -290,7 +290,7 @@ function editorPage(baseUrl, csrfToken) {
         columns.forEach(col => {
           const key = col.key || col;
           const td = document.createElement("td");
-          const input = createInput(rowData ? rowData[key] : "", col.multiline);
+          const input = createInput(rowData ? rowData[key] : "", col);
           input.dataset.key = key;
           input.style.minWidth = col.multiline ? "320px" : "160px";
           td.appendChild(input);
@@ -347,7 +347,7 @@ function editorPage(baseUrl, csrfToken) {
         const tr = document.createElement("tr");
         columns.forEach((col, idx) => {
           const td = document.createElement("td");
-          const input = createInput(rowData ? rowData[idx] : "", false);
+          const input = createInput(rowData ? rowData[idx] : "", { multiline: false });
           input.dataset.idx = idx;
           input.style.minWidth = "160px";
           td.appendChild(input);
@@ -395,7 +395,7 @@ function editorPage(baseUrl, csrfToken) {
       const collectFns = [];
       const list = document.createElement("div");
       list.style.display = "grid";
-      list.style.gap = "16px";
+      list.style.gap = "20px";
 
       function addGroup(group) {
         const card = document.createElement("div");
@@ -480,7 +480,7 @@ function editorPage(baseUrl, csrfToken) {
         const blockCollectors = [];
         (schema.blocks || []).forEach(block => {
           const section = document.createElement("div");
-          section.style.margin = "12px 0 18px";
+          section.style.margin = "18px 0 26px";
           section.innerHTML = "<div style=\\"font-weight:700;margin-bottom:8px\\">" + block.label + "</div>";
           if (block.type === "table") {
             const collect = renderTable(section, data?.[block.key] || [], block.columns);
