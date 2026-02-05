@@ -25,6 +25,13 @@
   btnClose.addEventListener('click', closeDrawer);
   backdrop.addEventListener('click', closeDrawer);
 
+  if (frame) {
+    frame.addEventListener('load', () => {
+      frame.style.display = 'block';
+      if (welcome) welcome.style.display = 'none';
+    });
+  }
+
   function openInFrame(url){
     try{
       frame.src = url;
