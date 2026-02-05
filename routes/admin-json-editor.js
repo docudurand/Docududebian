@@ -79,6 +79,9 @@ td{vertical-align:top;padding:8px}
       .wrap{max-width:100%}
       th{font-size:11px}
     }
+	input,select,textarea{box-sizing:border-box}
+td{overflow:hidden}
+th:last-child, td:last-child{width:140px; white-space:nowrap}
   </style>
 </head>
 <body>
@@ -293,8 +296,9 @@ function editorPage(baseUrl, csrfToken) {
           const td = document.createElement("td");
           const input = createInput(rowData ? rowData[key] : "", col);
           input.dataset.key = key;
-          input.style.minWidth = col.multiline ? "320px" : "160px";
-          td.appendChild(input);
+td.style.minWidth = col.multiline ? "360px" : "180px";
+td.appendChild(input);
+
           tr.appendChild(td);
         });
         const tdAct = document.createElement("td");
