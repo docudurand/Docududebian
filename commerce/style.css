@@ -6,11 +6,14 @@
   --pillText: #ffffff;
   --shadow: 0 14px 30px rgba(0,0,0,.12);
   --radius: 18px;
+
+  /* Largeur cible tablette (on garde la logique), mais la frame peut occuper 100% de l’écran */
   --ipadW: 1400px;
 }
 
 *{ box-sizing: border-box; }
 html,body{ height: 100%; }
+
 body{
   margin: 0;
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
@@ -18,6 +21,7 @@ body{
   color: #0f172a;
 }
 
+/* Barre du haut */
 .topbar{
   height: 44px;
   display: flex;
@@ -25,6 +29,7 @@ body{
   justify-content: center;
   padding: 8px 10px;
 }
+
 .burger{
   width: 44px;
   height: 44px;
@@ -35,6 +40,7 @@ body{
   display: grid;
   place-items: center;
 }
+
 .burger span{
   display: block;
   width: 28px;
@@ -44,14 +50,22 @@ body{
   margin: 3px 0;
 }
 
+/* =========================================================
+   CONTENEUR PRINCIPAL
+   Objectif : utiliser tout le cadre disponible (iframe/pages)
+   sans “rétrécir” le contenu sur grand écran.
+   ========================================================= */
+
 .stage{
   padding: 10px 14px 26px;
-  display: flex;
-  justify-content: center;
+  width: 100%;
+  display: block;          /* plus de centrage qui crée des marges */
 }
+
 .frame{
   width: 100%;
-  max-width: var(--ipadW);
+  max-width: none;         /* ⬅️ clé : plus de limite interne */
+  margin: 0;
   background: rgba(255,255,255,.55);
   border-radius: 10px;
   box-shadow: var(--shadow);
@@ -59,13 +73,15 @@ body{
   min-height: calc(100vh - 44px - 46px);
   position: relative;
 }
+
+/* iPad / tablette : on garde le padding, mais la frame reste pleine largeur */
 @media (max-width: 1024px){
-  .stage{ padding-left: 6px; padding-right: 6px; }
-  :root{ --ipadW: 100%; }
+  .stage{ padding-left: 10px; padding-right: 10px; }
 }
 
+/* Vidéo accueil */
 .homeVideo{
-  width: min(100%, var(--ipadW));
+  width: 100%;
   aspect-ratio: 16 / 9;
   background: #000;
   border-radius: 14px;
@@ -79,11 +95,13 @@ body{
   border: 0;
   display: block;
 }
+
 .welcome{
   display: grid;
   place-items: center;
   padding: 42px 14px;
 }
+
 .logo{
   width: min(720px, 92%);
   height: auto;
@@ -91,15 +109,17 @@ body{
   filter: drop-shadow(0 10px 24px rgba(0,0,0,.10));
 }
 
+/* Iframe de contenu : doit prendre toute la place de la frame */
 .contentFrame{
   width: 100%;
   height: 100%;
   min-height: calc(100vh - 44px - 46px);
   border: 0;
-  display: none;
+  display: none;          /* géré par JS */
   background: #fff;
 }
 
+/* Drawer */
 .backdrop{
   position: fixed;
   inset: 0;
@@ -120,12 +140,14 @@ body{
   transition: transform .22s ease;
   padding: 18px 16px;
 }
+
 .drawer.open{ transform: translateX(0); }
 
 .drawerTop{
   display: flex;
   justify-content: flex-end;
 }
+
 .close{
   border: 0;
   background: transparent;
@@ -162,26 +184,28 @@ body{
   user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
+
 .navBtn:active{ transform: translateY(1px); }
 
 .navLink{ display: inline-block; text-decoration: none; }
 
 @media (max-width: 520px){
-  :root{ --ipadW: 100%; }
   .navBtn{ width: 240px; }
 }
 
+/* Accueil */
 .frame.frame--home{
   min-height: auto;
   padding-bottom: 0;
 }
+
 .frame.frame--home .welcome{
   padding: 18px 14px 22px;
 }
+
 .frame.frame--home .homeVideo{
   margin-bottom: 0;
 }
-
 
 .homeTitle{
   margin: 0 0 12px;
@@ -202,11 +226,13 @@ body{
   display: grid;
   place-items: center;
 }
+
 .homeBrand__logo{
   width: min(360px, 80vw);
   height: auto;
   display: block;
 }
+
 @media (max-width: 520px){
   .homeBrand__logo{ width: min(260px, 86vw); }
 }
@@ -227,8 +253,10 @@ body{
   padding: 6px 0 4px;
   justify-self: center;
 }
+
 .drawerTitle__durand{ color: var(--brandBlue) !important; }
 .drawerTitle__commerce{ color: var(--brandNavy) !important; }
+
 @media (max-width: 520px){
   .drawerTitle{ font-size: 18px; }
 }
