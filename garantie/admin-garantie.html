@@ -8,7 +8,7 @@
   <link
     rel="icon"
     type="image/png"
-    href="https://i.postimg.cc/h4Z7dZ7q/DSG.png"
+    href="https://raw.githubusercontent.com/docudurand/docudurpho/main/DSG.png"
   />
 <style>
     * { box-sizing: border-box; }
@@ -2384,7 +2384,7 @@ function formatDateFRshort(val) {
 function voirDossier(id) {
     let d = allDossiers.find(x=>x.id===id);
     if (!d) return alert("Dossier introuvable !");
-    let logoUrl = "https://i.postimg.cc/h4Z7dZ7q/DSG.png";
+    let logoUrl = "https://raw.githubusercontent.com/docudurand/docudurpho/main/DSG.png";
     let dateCreation = d.date ? new Date(d.date).toLocaleDateString("fr-FR") : "";
     let clientNom = (d.nom||"Client").replace(/[^a-zA-Z0-9]/g, "_").toUpperCase();
     let dateStr = "";

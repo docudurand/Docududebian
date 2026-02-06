@@ -808,7 +808,7 @@
 
     async function loadLogo(doc){
       try{
-        const logoUrl = "https://i.postimg.cc/FsgLstVW/logo.png";
+        const logoUrl = "https://raw.githubusercontent.com/docudurand/docudurpho/main/logo.png";
         const resp = await fetch(logoUrl);
         const blob = await resp.blob();
         const base64 = await new Promise((resolve) => {

@@ -169,7 +169,7 @@ let LOGO_B64_CACHE = null;
 
 async function getLogoBase64() {
   if (LOGO_B64_CACHE) return LOGO_B64_CACHE;
-  const logoUrl = "https://i.postimg.cc/FsgLstVW/logo.png";
+  const logoUrl = "https://raw.githubusercontent.com/docudurand/docudurpho/main/logo.png";
   const resp = await fetch(logoUrl);
   const blob = await resp.blob();
   const b64 = await new Promise((resolve) => {

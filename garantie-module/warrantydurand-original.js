@@ -351,7 +351,7 @@ function cleanupFiles(arr) {
 
 // Recupere le logo en ligne pour le PDF.
 async function getLogoBuffer() {
-  const url = "https://i.postimg.cc/h4Z7dZ7q/DSG.png";
+  const url = "https://raw.githubusercontent.com/docudurand/docudurpho/main/DSG.png";
   const res = await axios.get(url, { responseType: "arraybuffer" });
   return Buffer.from(res.data, "binary");
 }
