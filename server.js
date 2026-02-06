@@ -1851,7 +1851,7 @@ app.post("/conges/api", async (req, res) => {
     const duFR = fmtDateFR(dateDu), auFR = fmtDateFR(dateAu);
     const nomPrenomStr = `${_nom.toUpperCase()} ${_prenom}`;
     const pdfBuffer = await makeLeavePdf({
-      logoUrl: "https://i.postimg.cc/CxLtQ1xJ/logodurand.png",
+      logoUrl: "https://raw.githubusercontent.com/docudurand/docudurpho/main/logodurand.png",
       magasin,
       nomPrenom: nomPrenomStr,
       service,

@@ -264,7 +264,7 @@ async function buildPdf({
 
   try {
     const resp = await fetch(
-      "https://i.postimg.cc/CxLtQ1xJ/logodurand.png"
+      "https://raw.githubusercontent.com/docudurand/docudurpho/main/logodurand.png"
     );
     const buf = Buffer.from(await resp.arrayBuffer());
     doc.image(buf, pageLeft, 36, { width: 90 });
