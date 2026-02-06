@@ -1,4 +1,4 @@
-<!-- VERSION: 2026-02-06 PLEIN-CADRE -->
+<!-- VERSION: 2026-02-06 PLEIN-CADRE + FILTER COMMERCIAL + ONGLET SELECT BOSCH -->
 <!doctype html>
 <html lang="fr">
 <head>
@@ -74,13 +74,14 @@
       color: #fff;
       box-shadow: var(--shadow);
     }
-.layout{
-  display: grid;
-  width: 100%;
-  grid-template-columns: 25% 75%;
-  gap: 16px;
-  align-items: start;
-}
+
+    .layout{
+      display: grid;
+      width: 100%;
+      grid-template-columns: 23% 77%;
+      gap: 16px;
+      align-items: start;
+    }
 
     .panel{
       background: var(--card);
@@ -94,12 +95,15 @@
       display: grid;
       gap: 8px;
     }
-    .list-header input{
+    .list-header input,
+    .list-header select{
       width: 100%;
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 12px 14px;
       font-size: 16px;
+      background: #fff;
+      color: var(--ink);
     }
     .btn{
       border: 0;
@@ -183,12 +187,14 @@
       text-transform: uppercase;
       letter-spacing: .06em;
     }
-    td input{
+    td input, td select{
       width: 100%;
       border: 1px solid var(--border);
       border-radius: 10px;
       padding: 10px 10px;
       font-size: 16px;
+      background: #fff;
+      color: var(--ink);
     }
     td .small{
       width: 96px;
@@ -250,51 +256,54 @@
       .layout{ grid-template-columns: 1fr; }
       .orders{ max-height: none; }
     }
-	/* ===== TABLEAU LIGNES : LISIBILITÉ TABLETTE ===== */
-/* Cette page n'a pas de conteneur .lines : on cible directement l'éditeur */
-#orderEditor table{ font-size: 16px !important; }
-#orderEditor th{ font-size: 13px !important; }
-#orderEditor td{ padding: 10px 6px !important; vertical-align: middle !important; }
 
-/* Inputs plus grands (tap-friendly) */
-#orderEditor td input{
-  font-size: 17px !important;
-  padding: 10px 12px !important;
-  border-radius: 12px !important;
-  height: 44px !important;
-  line-height: 22px !important;
-}
+    /* ===== TABLEAU LIGNES : LISIBILITÉ TABLETTE ===== */
+    #orderEditor table{ font-size: 16px !important; }
+    #orderEditor th{ font-size: 13px !important; }
+    #orderEditor td{ padding: 10px 6px !important; vertical-align: middle !important; }
 
-/* Largeurs de colonnes (ONGLET / RÉF / PRODUIT / PU / QTÉ) */
-#orderEditor table th:nth-child(1),
-#orderEditor table td:nth-child(1){ width: 190px !important; } /* ONGLET */
+    /* Inputs plus grands (tap-friendly) */
+    #orderEditor td input,
+    #orderEditor td select{
+      font-size: 17px !important;
+      padding: 10px 12px !important;
+      border-radius: 12px !important;
+      height: 44px !important;
+      line-height: 22px !important;
+    }
 
-#orderEditor table th:nth-child(2),
-#orderEditor table td:nth-child(2){ width: 190px !important; } /* RÉF */
+    /* Largeurs de colonnes (ONGLET / RÉF / PRODUIT / PU / QTÉ) */
+    /* ⚠️ avant: colonne ONGLET cachée -> on l’affiche */
+    #orderEditor table th:nth-child(1),
+    #orderEditor table td:nth-child(1){ width: 240px !important; } /* ONGLET */
 
-#orderEditor table th:nth-child(3),
-#orderEditor table td:nth-child(3){ width: 170px !important; } /* PRODUIT */
+    #orderEditor table th:nth-child(2),
+    #orderEditor table td:nth-child(2){ width: 220px !important; } /* RÉF */
 
-#orderEditor table th:nth-child(4),
-#orderEditor table td:nth-child(4){ width: 120px !important; } /* PU */
+    #orderEditor table th:nth-child(3),
+    #orderEditor table td:nth-child(3){ width: 260px !important; } /* PRODUIT */
 
-#orderEditor table th:nth-child(5),
-#orderEditor table td:nth-child(5){ width: 70px !important; } /* QTÉ */
+    #orderEditor table th:nth-child(4),
+    #orderEditor table td:nth-child(4){ width: 90px !important; } /* PU */
 
-#orderEditor table th:nth-child(6),
-#orderEditor table td:nth-child(6){ width: 90px !important; } /* TOTAL */
+    #orderEditor table th:nth-child(5),
+    #orderEditor table td:nth-child(5){ width: 60px !important; } /* QTÉ */
 
-#orderEditor table th:nth-child(7),
-#orderEditor table td:nth-child(7){ width: 90px !important; } /* actions */
+    #orderEditor table th:nth-child(6),
+    #orderEditor table td:nth-child(6){ width: 80px !important; } /* TOTAL */
 
-/* Bouton Suppr plus lisible */
-#orderEditor .rowActions button{
-  font-size: 15px !important;
-  padding: 10px 12px !important;
-  border-radius: 12px !important;
-  height: 44px !important;
-}
-</style>
+    #orderEditor table th:nth-child(7),
+    #orderEditor table td:nth-child(7){ width: 80px !important; } /* actions */
+
+    /* Bouton Suppr plus lisible */
+    #orderEditor .rowActions button{
+      font-size: 15px !important;
+      padding: 10px 12px !important;
+      border-radius: 12px !important;
+      height: 44px !important;
+    }
+  </style>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 </head>
@@ -315,6 +324,12 @@
       <section class="panel">
         <div class="list-header">
           <input id="searchInput" type="text" placeholder="Recherche client, commercial, date..." />
+
+          <!-- ✅ Nouveau filtre commercial -->
+          <select id="salesFilter">
+            <option value="">Tous les commerciaux</option>
+          </select>
+
           <button class="btn secondary" id="btnRefresh" type="button">Actualiser</button>
         </div>
         <div id="ordersList" class="orders"></div>
@@ -372,11 +387,28 @@
   </div>
 
   <script>
-  console.log("TELEVENTE-ORDERS VERSION: 2026-02-06 A");
+    console.log("TELEVENTE-ORDERS VERSION: 2026-02-06 A + FILTERS");
+
     const API_BASE = '/formtelevente';
     let currentOrigin = 'bosch';
     let ordersCache = [];
     let currentOrder = null;
+
+    // ✅ Liste EXACTE demandée pour la colonne "Onglet" (Bosch)
+    const ONGLET_OPTIONS_BOSCH = [
+      'batteriekadeos',
+      'batterietv',
+      'gigawattkadeos',
+      'gigawatttv',
+      'balai',
+      'freinage',
+      'ampoule',
+      'bougieall',
+      'bougiepre',
+      'filtre-huile',
+      'Kit-Distribution',
+      'liquide'
+    ];
 
     const BOSCH_TAB_LIST = [
       { id:'batteriekadeos',  name:'Batterie Bosch Kadeos' },
@@ -431,6 +463,8 @@
     const linesBody = document.getElementById('linesBody');
     const statusEl = document.getElementById('status');
 
+    const salesFilterEl = document.getElementById('salesFilter');
+
     function fmtDate(iso){
       try{
         const d = new Date(iso);
@@ -454,20 +488,51 @@
       statusEl.textContent = msg || '';
     }
 
+    function escapeHtml(s){
+      return String(s ?? '')
+        .replaceAll('&','&amp;')
+        .replaceAll('<','&lt;')
+        .replaceAll('>','&gt;')
+        .replaceAll('"','&quot;')
+        .replaceAll("'",'&#039;');
+    }
+
+    // ✅ Remplit la liste déroulante "Commercial" à partir des commandes chargées
+    function rebuildSalesFilter(){
+      const current = salesFilterEl.value || '';
+      const set = new Set();
+      ordersCache.forEach(o => {
+        const sp = (o.salesperson || '').trim();
+        if (sp) set.add(sp);
+      });
+      const list = Array.from(set).sort((a,b)=>a.localeCompare(b, 'fr'));
+      salesFilterEl.innerHTML = `<option value="">Tous les commerciaux</option>` + list.map(s =>
+        `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`
+      ).join('');
+      salesFilterEl.value = list.includes(current) ? current : '';
+    }
+
     async function fetchOrders(){
       setStatus('Chargement des commandes...');
       const res = await fetch(`${API_BASE}/orders?origin=${encodeURIComponent(currentOrigin)}`);
       const data = await res.json();
       ordersCache = Array.isArray(data) ? data : [];
+      rebuildSalesFilter();
       renderOrders();
       setStatus('');
     }
 
     function renderOrders(){
       const q = document.getElementById('searchInput').value.trim().toLowerCase();
+      const sf = (salesFilterEl.value || '').trim().toLowerCase();
+
       ordersList.innerHTML = '';
 
       const list = ordersCache.filter(o => {
+        if (sf){
+          const sp = (o.salesperson || '').toLowerCase();
+          if (sp !== sf) return false;
+        }
         if (!q) return true;
         const s = `${o.client || ''} ${o.salesperson || ''} ${o.createdAt || ''}`.toLowerCase();
         return s.includes(q);
@@ -483,9 +548,9 @@
         item.className = 'orderItem' + (currentOrder && currentOrder.id === o.id ? ' active' : '');
         item.dataset.id = o.id;
         item.innerHTML = `
-          <div class="orderClient">${o.client || '—'}</div>
-          <div class="orderMeta">${o.salesperson || '—'} • ${fmtDate(o.createdAt)}</div>
-          <div class="orderTotal">${formatMoney(o.total)}</div>
+          <div class="orderClient">${escapeHtml(o.client || '—')}</div>
+          <div class="orderMeta">${escapeHtml(o.salesperson || '—')} • ${escapeHtml(fmtDate(o.createdAt))}</div>
+          <div class="orderTotal">${escapeHtml(formatMoney(o.total))}</div>
         `;
         item.addEventListener('click', () => loadOrder(o.id));
         ordersList.appendChild(item);
@@ -531,6 +596,15 @@
       lines.forEach(line => appendLineRow(line));
     }
 
+    function makeBoschTabSelectHtml(value){
+      const current = (value || '').trim();
+      const opts = [
+        `<option value=""></option>`,
+        ...ONGLET_OPTIONS_BOSCH.map(id => `<option value="${escapeHtml(id)}"${id===current?' selected':''}>${escapeHtml(id)}</option>`)
+      ].join('');
+      return `<select class="tabSelect">${opts}</select>`;
+    }
+
     function appendLineRow(line){
       const tr = document.createElement('tr');
       const meta = {
@@ -541,20 +615,30 @@
         special: line.special || ''
       };
       tr.dataset.meta = JSON.stringify(meta);
+
+      // ✅ Onglet: select en Bosch / input en Lub (pour ne pas casser Lub)
+      const ongletCell = (currentOrigin === 'bosch')
+        ? makeBoschTabSelectHtml(line.tab || '')
+        : `<input class="tabInput" value="${escapeHtml(line.tab || '')}">`;
+
       tr.innerHTML = `
-        <td><input value="${line.tab || ''}"></td>
-        <td><input value="${line.ref || ''}"></td>
-        <td><input value="${line.produit || ''}"></td>
-        <td><input class="small" value="${Number(line.pu || 0).toFixed(2)}"></td>
-        <td><input class="small" value="${Number(line.qty || 0)}"></td>
+        <td>${ongletCell}</td>
+        <td><input class="refInput" value="${escapeHtml(line.ref || '')}"></td>
+        <td><input class="prodInput" value="${escapeHtml(line.produit || '')}"></td>
+        <td><input class="puInput small" value="${Number(line.pu || 0).toFixed(2)}"></td>
+        <td><input class="qtyInput small" value="${Number(line.qty || 0)}"></td>
         <td class="lineTotal">0,00 €</td>
         <td class="rowActions"><button type="button">Suppr.</button></td>
       `;
-      tr.querySelectorAll('input').forEach(inp => inp.addEventListener('input', updateTotal));
+
+      // ✅ recalcul sur saisie
+      tr.querySelectorAll('input, select').forEach(inp => inp.addEventListener('input', updateTotal));
+
       tr.querySelector('button').addEventListener('click', () => {
         tr.remove();
         updateTotal();
       });
+
       linesBody.appendChild(tr);
     }
 
@@ -570,8 +654,8 @@
         const block = document.createElement('div');
         block.className = 'commentBlock';
         block.innerHTML = `
-          <label>Commentaire ${tabId}</label>
-          <textarea data-tab="${tabId}">${byTab[tabId] || ''}</textarea>
+          <label>Commentaire ${escapeHtml(tabId)}</label>
+          <textarea data-tab="${escapeHtml(tabId)}">${escapeHtml(byTab[tabId] || '')}</textarea>
         `;
         wrap.appendChild(block);
       });
@@ -580,14 +664,21 @@
     function getLinesFromTable(){
       const lines = [];
       linesBody.querySelectorAll('tr').forEach(tr => {
-        const inputs = tr.querySelectorAll('input');
-        const tab = inputs[0].value.trim();
-        const ref = inputs[1].value.trim();
-        const produit = inputs[2].value.trim();
-        const pu = parseNumber(inputs[3].value);
-        const qty = parseNumber(inputs[4].value);
+        const tabEl = tr.querySelector('.tabSelect') || tr.querySelector('.tabInput');
+        const refEl = tr.querySelector('.refInput');
+        const prodEl = tr.querySelector('.prodInput');
+        const puEl = tr.querySelector('.puInput');
+        const qtyEl = tr.querySelector('.qtyInput');
+
+        const tab = (tabEl?.value || '').trim();
+        const ref = (refEl?.value || '').trim();
+        const produit = (prodEl?.value || '').trim();
+        const pu = parseNumber(puEl?.value);
+        const qty = parseNumber(qtyEl?.value);
+
         let meta = {};
         try { meta = JSON.parse(tr.dataset.meta || '{}'); } catch { meta = {}; }
+
         const months = meta.months && typeof meta.months === 'object' ? meta.months : null;
         if (months) {
           const sum = Object.values(months).reduce((a,v)=>a+(Number(v)||0),0);
@@ -598,6 +689,7 @@
             months.avril = 0;
           }
         }
+
         if (qty > 0 || ref || produit) {
           lines.push({
             tab,
@@ -619,13 +711,20 @@
     function updateTotal(){
       const lines = getLinesFromTable();
       let total = 0;
-      linesBody.querySelectorAll('tr').forEach((tr, idx) => {
-        const line = lines[idx];
-        if (!line) return;
+
+      // recalcul par ligne en conservant l’index des TR affichés
+      const trs = Array.from(linesBody.querySelectorAll('tr'));
+      trs.forEach((tr, i) => {
+        const line = lines[i];
+        if (!line){
+          tr.querySelector('.lineTotal').textContent = formatMoney(0);
+          return;
+        }
         const lineTotal = (Number(line.qty) || 0) * (Number(line.pu) || 0);
         total += lineTotal;
         tr.querySelector('.lineTotal').textContent = formatMoney(lineTotal);
       });
+
       document.getElementById('orderTotal').textContent = formatMoney(total);
     }
 
@@ -968,7 +1067,15 @@
 
     document.getElementById('btnRefresh').addEventListener('click', fetchOrders);
     document.getElementById('searchInput').addEventListener('input', renderOrders);
-    document.getElementById('btnAddLine').addEventListener('click', () => appendLineRow({ tab: '', ref: '', produit: '', pu: 0, qty: 1 }));
+
+    // ✅ filtre commercial
+    salesFilterEl.addEventListener('change', renderOrders);
+
+    document.getElementById('btnAddLine').addEventListener('click', () => {
+      appendLineRow({ tab: '', ref: '', produit: '', pu: 0, qty: 1 });
+      updateTotal();
+    });
+
     document.getElementById('btnSave').addEventListener('click', saveOrder);
     document.getElementById('btnPdf').addEventListener('click', downloadPdf);
 
@@ -977,8 +1084,14 @@
         document.querySelector('.tab.active')?.classList.remove('active');
         btn.classList.add('active');
         currentOrigin = btn.dataset.origin;
+
+        // reset sélection commande + refresh liste
         currentOrder = null;
         renderEditor();
+
+        // ✅ reset filtre commercial (évite filtre "invisible" entre Bosch/Lub)
+        salesFilterEl.value = '';
+
         fetchOrders();
       });
     });
