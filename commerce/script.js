@@ -91,24 +91,19 @@
         return;
       }
 
-      // 2) Televente -> new tab (avoid popup blocker: open immediately)
-      const id = btn.getAttribute('data-id');
-      if (id !== 'televente-bosch' && id !== 'televente-lub') return;
+// 2) Televente -> iframe (dans la page commerce)
+const id = btn.getAttribute('data-id');
+if (id !== 'televente-bosch' && id !== 'televente-lub') return;
 
-      e.preventDefault();
+e.preventDefault();
 
-      const w = window.open('about:blank', '_blank', 'noopener');
-      closeDrawer();
+(async () => {
+  await loadLinksOnce();
+  const url = (id === 'televente-bosch') ? televenteLinks.bosch : televenteLinks.lub;
+  if (!url) return;
+  openInFrame(url);
+})();
 
-      (async () => {
-        await loadLinksOnce();
-
-        const url = (id === 'televente-bosch') ? televenteLinks.bosch : televenteLinks.lub;
-        if (!url) { try { w && w.close(); } catch(_) {} return; }
-
-        try { w.location.href = url; } catch (_) { window.location.href = url; }
-      })();
-    });
 
     // Swipe-to-close (mobile)
     let startX = null;
